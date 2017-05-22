@@ -2,7 +2,7 @@
 
 Project poll is a web project for thesis
 
-![Database scheme](https://raw.githubusercontent.com/norbeq/project-poll/master/docs/database_scheme.png)
+![Database scheme](https://raw.githubusercontent.com/norbeq/projectpoll/master/docs/database_scheme.png)
 
 ## Installation
 *todo*
