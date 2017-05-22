@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, send_from_directory, json
 from flask_socketio import SocketIO
 from flask_login import current_user, LoginManager, login_user
-from projectpoll.model.user import User
+from model.user import User
 from routes.static import static_api
 from routes.login import login_api
 import base64
