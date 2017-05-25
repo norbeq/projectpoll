@@ -5,15 +5,38 @@
  */
 Ext.define('PP.Application', {
     extend: 'Ext.app.Application',
-    
+
     name: 'PP',
 
-    stores: [
-        // TODO: add global / shared stores here
+    controllers: [
+        'Login'
     ],
-    
+
+    requires: [
+        'Ext.form.Panel',
+        'Ext.util.History'
+    ],
+
+    launchLoginForm: function () {
+          this.mainView = Ext.create('Ext.container.Viewport', {
+
+            renderTo: Ext.getBody(),
+            items: [{
+                layout: "fit",
+                xtype: 'login'
+            }]
+        });
+    },
+
     launch: function () {
-        // TODO - Launch the application
+        Ext.History.init();
+        var getParams = document.URL.split("?");
+        var params = Ext.urlDecode(getParams[getParams.length - 1]);
+
+
+        console.log(getParams);
+        console.log(params);
+        this.launchLoginForm();
     },
 
     onAppUpdate: function () {
