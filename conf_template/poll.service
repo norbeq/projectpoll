@@ -1,0 +1,14 @@
+poll.service
+[Unit]
+Description=poll
+After=multi-user.target
+
+[Service]
+Type=idle
+
+Environment=VIRTUAL_ENV=$venv
+Environment=PYTHONPATH=$project:$PYTHONPATH
+ExecStart=$venv/bin/python $project/main.py
+
+[Install]
+WantedBy=multi-user.target

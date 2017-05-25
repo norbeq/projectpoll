@@ -5,13 +5,15 @@ from model.user import User
 from routes.static import static_api
 from routes.login import login_api
 import base64
+from config import token
 
 from util.middleware import AuthenticationMiddleware
 import eventlet
 eventlet.monkey_patch()
 
 app = Flask(__name__, static_url_path='')
-app.config['SECRET_KEY'] = 'sdj83r578fwij389rfje89f8948h894h298f'
+app.config['token'] = token
+
 # app.wsgi_app = AuthenticationMiddleware(app.wsgi_app)
 socketio = SocketIO(app)
 
@@ -55,8 +57,8 @@ def connect_handler():
 def handle_message(message):
     print(message)
 
-app.register_blueprint(login_api, url_prefix='')
+app.register_blueprint(login_api, url_prefix='/api')
 app.register_blueprint(static_api, url_prefix='')
 
 if __name__ == '__main__':
-    socketio.run(app,'0.0.0.0',80)
+    socketio.run(app,'0.0.0.0',80, debug = True)

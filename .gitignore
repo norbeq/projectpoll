@@ -1,1 +1,12 @@
 /.idea/
+/conf/poll.service/
+/conf/poll.mianor.pl.conf/
+conf/
+config.py/
+model/__pycache__/
+routes/__pycache__/
+static/bootstrap.json
+static/bootstrap.jsonp
+static/build/
+util/__pycache__/
+/config.py
