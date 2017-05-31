@@ -1,0 +1,46 @@
+
+@include extjs-button-small-ui(
+        $ui: 'header',
+        $color: #a8a8a8,
+        $glyph-color: #858585,
+        $background-color: transparent,
+        $border-width: 0
+);
+
+@include extjs-button-large-ui(
+        $ui: 'menu',
+        $color: #34608e,
+        $glyph-color: #858585,
+        $background-color: transparent,
+        $border-width: 0
+);
+
+@include extjs-button-large-ui(
+        $ui: 'menu-active',
+        $color: #34608e,
+        $glyph-color: #858585,
+        $background-color: rgba(111, 164, 255, 0.42),
+        $border-width: 0
+);
+
+.navigationMenu {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background-color: #858585;
+  transition: 0.5s;
+  overflow-y: auto;
+};
+
+.navigationMenu a {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #858585;
+  display: block;
+  transition: 0.3s
+};

@@ -1,10 +1,10 @@
 /**
  * Created by Norbert on 2017-05-25.
  */
-Ext.define('PP.controller.Login', {
+Ext.define('PP.controller.Main', {
     extend: 'Ext.app.Controller',
     views: [
-        'login.Login',
-        'login.LoginController'
+        'main.Main',
+        'main.MainController'
     ]
 });

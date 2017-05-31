@@ -9,17 +9,21 @@ Ext.define('PP.Application', {
     name: 'PP',
 
     controllers: [
-        'Login'
+        'Main', 'Login'
+    ],
+
+    stores: [
+
     ],
 
     requires: [
         'Ext.form.Panel',
-        'Ext.util.History'
+        'Ext.util.History',
+        'Ext.ux.layout.ResponsiveColumn'
     ],
 
     launchLoginForm: function () {
-          this.mainView = Ext.create('Ext.container.Viewport', {
-
+        this.mainView = Ext.create('Ext.container.Viewport', {
             renderTo: Ext.getBody(),
             items: [{
                 layout: "fit",
@@ -28,15 +32,27 @@ Ext.define('PP.Application', {
         });
     },
 
+    launchMain: function () {
+        console.log('launch main');
+        Ext.create('PP.view.main.Main',{
+            id: 'main'
+        });
+    },
+
+    launchRegister: function () {
+        // this.mainView = Ext.create('PP.view.register.Register');
+    },
+
     launch: function () {
         Ext.History.init();
         var getParams = document.URL.split("?");
         var params = Ext.urlDecode(getParams[getParams.length - 1]);
 
-
-        console.log(getParams);
-        console.log(params);
-        this.launchLoginForm();
+        // if(params['register'] !== undefined){
+        //     this.launchRegister();
+        // } else {
+        this.launchMain();
+        // }
     },
 
     onAppUpdate: function () {

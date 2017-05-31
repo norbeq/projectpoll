@@ -5,6 +5,5 @@
  */
 Ext.application({
     name: 'PP',
-
-    extend: 'PP.Application',
+    extend: 'PP.Application'
 });

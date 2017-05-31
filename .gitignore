@@ -9,4 +9,5 @@ static/bootstrap.json
 static/bootstrap.jsonp
 static/build/
 util/__pycache__/
+templates/
 /config.py
