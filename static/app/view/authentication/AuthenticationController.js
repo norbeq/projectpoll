@@ -2,8 +2,24 @@ Ext.define('PP.view.authentication.AuthenticationController', {
     extend: 'Ext.app.ViewController',
     alias: 'controller.authentication',
 
+
     onLoggedIn: function (token) {
-        Ext.toast('Zalogowano do aplikacji pomyślnie.', 'Sukces', 't')
+        PP.util.Security.initToken(token);
+        Ext.util.Cookies.set("auth",token);
+        Ext.toast('Zalogowano do aplikacji pomyślnie.', 'Sukces', 't');
+
+        Ext.getStore('NavigationTree').getRootNode().insertChild(0, {
+            text: 'Strona główna',
+            iconCls: 'x-fa fa-desktop',
+            rowCls: 'nav-tree-badge nav-tree-badge-new',
+            viewType: 'home-logged',
+            leaf: true
+        });
+        Ext.getStore('NavigationTree').getRootNode().findChild("viewType", "home").remove();
+        Ext.getStore('NavigationTree').getRootNode().findChild("viewType", "login").remove();
+
+        Ext.getCmp('main').getViewModel().set('username', PP.util.Security.payload.username);
+        this.redirectTo('home-logged', true);
     },
 
     onLoginButton: function () {
@@ -38,9 +54,6 @@ Ext.define('PP.view.authentication.AuthenticationController', {
                 Ext.toast('Błąd autentykacji.', 'Błąd', 't')
             }
         });
-
-
-        // this.redirectTo('home', true);
     },
 
     onLoginAsButton: function () {
@@ -52,7 +65,30 @@ Ext.define('PP.view.authentication.AuthenticationController', {
     },
 
     onSignupClick: function () {
-        this.redirectTo('home', true);
+        var me = this,
+            params = {
+                "email": this.lookup('register_email').getValue(),
+                "username": this.lookup('register_username').getValue(),
+                "password": this.lookup('register_password').getValue()
+            };
+        Ext.Ajax.request({
+            url: 'api/register',
+            method: "POST",
+            params: Ext.util.JSON.encode(params),
+            defaultHeaders: {'Content-Type': 'application/json'},
+            success: function (response, opts) {
+                var obj = Ext.decode(response.responseText);
+                if(obj.success) {
+                    Ext.toast('Udało się', 'Sukces', 't');
+                    me.redirectTo('login', true);
+                } else {
+                    Ext.toast('Błąd rejestracji.', 'Błąd', 't')
+                }
+            },
+            failure: function (response, opts) {
+                Ext.toast('Błąd rejestracji.', 'Błąd', 't')
+            }
+        });
     },
 
     onResetClick: function () {
