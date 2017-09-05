@@ -3,24 +3,43 @@ from flask_socketio import SocketIO
 from flask_login import current_user, LoginManager, login_user
 from routes.static import static_api
 from routes.login import login_api
+from routes.poll import poll_api
+from routes.register import register_api
+from routes.form import form_api
+from routes.respondent import respondent_api
+from routes.activation import activation_api
 from model.model import db
+from jose import jwt
 import base64
-from config import token, db_conf
+from config import token, db_conf, mail_conf, http_url
 
-from util.middleware import AuthenticationMiddleware
 import eventlet
+
 eventlet.monkey_patch()
 
 app = Flask(__name__, static_url_path='')
 app.config['token'] = token
 app.config['SQLALCHEMY_DATABASE_URI'] = db_conf
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+app.config['http_url'] = http_url
+app.config['mail_conf'] = mail_conf
+
+# (Debug=True, MAIL_SERVER=app.config['mail']['server'], MAIL_PORT=app.config['mail']['port'],
+#                 MAIL_USE_SSL=app.config['mail']['use_ssl'], MAIL_USERNAME=app.config['mail']['username'],
+#                 MAIL_PASSWORD=app.config['mail']['password'])
+
+app.config.update(
+    DEBUG=True,
+    MAIL_SERVER=mail_conf['server'],
+    MAIL_PORT=mail_conf['port'],
+    MAIL_USE_SSL=mail_conf['use_ssl'],
+    MAIL_USERNAME=mail_conf['username'],
+    MAIL_PASSWORD=mail_conf['password']
+)
 
 
-
-
-# app.wsgi_app = AuthenticationMiddleware(app.wsgi_app)
 socketio = SocketIO(app)
+
 
 # login_manager = LoginManager()
 # login_manager.init_app(app)
@@ -49,25 +68,32 @@ socketio = SocketIO(app)
 #             return user
 #     return None
 #
-# @socketio.on('connect')
-# def connect_handler():
-#     if current_user.is_authenticated:
-#         print('aaa')
-#         return True
-#     else:
-#         print('not allowed')
-#         return False  # not allowed here
-#
-# @socketio.on('messages')
-# def handle_message(message):
-#     print(message)
+@socketio.on('connect')
+def connect_handler():
+    if not 'auth' in request.cookies:
+        return False
 
-def authenticate(username, password):
+    try:
+        decoded = jwt.decode(request.cookies['auth'], app.config['token']['key'], algorithms='HS256')
+    except:
+        return False
+
     return True
 
+
+@socketio.on('messages')
+def handle_message(message):
+    print(message)
+
+
+app.register_blueprint(form_api, url_prefix='/api')
 app.register_blueprint(login_api, url_prefix='/api')
-db.init_app(app)
+app.register_blueprint(register_api, url_prefix='/api')
+app.register_blueprint(poll_api, url_prefix='/api')
+app.register_blueprint(respondent_api, url_prefix='/api')
+app.register_blueprint(activation_api, url_prefix='/api')
 app.register_blueprint(static_api, url_prefix='')
+db.init_app(app)
 
 if __name__ == '__main__':
-    socketio.run(app,'0.0.0.0',80, debug = True)
+    socketio.run(app, '0.0.0.0', 80, debug=True)

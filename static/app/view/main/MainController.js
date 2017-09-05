@@ -1,114 +1,215 @@
-/**
- * Created by Norbert on 2017-05-25.
- */
 Ext.define('PP.view.main.MainController', {
     extend: 'Ext.app.ViewController',
     alias: 'controller.main',
 
-    routes: {
-        // 'login': {
-        //     action: "onLogin"
-        // },
-        // 'home': {
-        //     action: "onHome"
-        // },
-
-        ':page': {
-            action: "changeCard",
-            conditions: {
-                ':page': "([a-zA-Z0-9]+)"
-            }
-        }
-    },
-
     listen: {
         controller: {
-            '*': {
-                // We delegate all changes of router history to this controller by firing
-                // the "changeroute" event from other controllers.
-                changeroute: 'changeRoute',
-
-                unmatchedroute: 'onUnmatchedRoute'
+            '#': {
+                unmatchedroute: 'onRouteChange'
             }
         }
     },
 
-    changeCard: function (card) {
-        this.lookup(this.lookup('mainMenuContainer').activeItemReference).setUI('menu');
-
-        switch (card) {
-            case "home":
-                this.lookup('mainMenuContainer').activeItemReference = "menu_home";
-                this.lookup('menu_home').setUI('menu-active');
-                this.lookup('mainMenuContainer').setActiveItem(0);
-                break;
-            case "login":
-                this.lookup('mainMenuContainer').activeItemReference = "menu_login";
-                this.lookup('menu_login').setUI('menu-active');
-                this.onLogin();
-                break;
-            default:
-                console.log('nothing to do');
-                break;
-        }
+    routes: {
+        ':node': 'onRouteChange'
     },
 
+    lastView: null,
 
-    changeRoute: function (controller, route) {
-        console.log(route);
-        // // Since we parse
-        // if (route.substring(0, 1) !== '!') {
-        //     route = '!' + route;
-        // }
-        //
-        // this.redirectTo(route);
-    },
+    setCurrentView: function (hashTag) {
+        hashTag = (hashTag || '').toLowerCase();
 
+        if (["home", 'login', 'register', 'activation', ''].indexOf(hashTag) > -1 || PP.util.Security.checkCookieToken()) {
 
-    onUnmatchedRoute: function (token) {
-        console.log(token);
-        // if (token) {
-        //     this.onBadRoute();
-        // }
-    },
+            var me = this,
+                refs = me.getReferences(),
+                mainCard = refs.mainCardPanel,
+                mainLayout = mainCard.getLayout(),
+                navigationList = refs.navigationTreeList,
+                store = navigationList.getStore();
+            var node = store.findNode('routeId', hashTag) ||
+                store.findNode('viewType', hashTag) || Ext.getStore('Pages').findNode('viewType', hashTag),
+                view = (node && node.get('viewType')) || 'page404',
+                lastView = me.lastView,
+                existingItem = mainCard.child('component[routeId=' + hashTag + ']'),
+                newView;
 
-    onMenuBarClick: function () {
-        var mainMenuBar = this.lookup('mainMenu'),
-            newWidth = 360;
-        if (mainMenuBar.state === 'closed') {
-            if (window.innerWidth < 360) {
-                newWidth = window.innerWidth;
+            if (lastView && lastView.isWindow) {
+                lastView.destroy();
             }
-            mainMenuBar.setWidth(newWidth);
-            mainMenuBar.state = "open";
-        } else {
-            mainMenuBar.setWidth(0);
-            mainMenuBar.state = "closed";
-        }
-    },
-    onMainCardClick: function () {
-        var mainMenuBar = this.lookup('mainMenu');
-        mainMenuBar.setWidth(0);
-        mainMenuBar.state = "closed";
-    },
-    onLogin: function () {
-        if (!Ext.getCmp('login')) {
-            Ext.widget('login', {
-                modal: true,
-                íd: 'login',
-                listeners: {
-                    close: "onLoginClose"
+
+            lastView = mainLayout.getActiveItem();
+
+            if (!existingItem) {
+                newView = Ext.create({
+                    xtype: view,
+                    routeId: hashTag,
+                    hideMode: 'offsets'
+                });
+            }
+
+            if (!newView || !newView.isWindow) {
+                if (existingItem) {
+                    if (existingItem !== lastView) {
+                        mainLayout.setActiveItem(existingItem);
+                    }
+                    newView = existingItem;
                 }
-            });
+                else {
+                    Ext.suspendLayouts();
+                    mainLayout.setActiveItem(mainCard.add(newView));
+                    Ext.resumeLayouts(true);
+                }
+            }
+
+
+            if (node === null) {
+
+            }
+
+            navigationList.setSelection(node);
+
+            if (newView.isFocusable(true)) {
+                newView.focus();
+            }
+
+            me.lastView = newView;
+        } else {
+            this.redirectTo('home');
+        }
+
+    },
+
+    onNavigationTreeSelectionChange: function (tree, node) {
+        var to = node && (node.get('routeId') || node.get('viewType'));
+
+        if (to) {
+            this.redirectTo(to);
         }
     },
-    onLoginClose: function () {
-        this.redirectTo("home")
-    },
-    onHome: function () {
-        if (Ext.getCmp('login')) {
-            Ext.getCmp('login').close();
+
+    onToggleNavigationSize: function () {
+        var me = this,
+            refs = me.getReferences(),
+            navigationList = refs.navigationTreeList,
+            wrapContainer = refs.mainContainerWrap,
+            collapsing = !navigationList.getMicro(),
+            new_width = collapsing ? 64 : 250;
+
+        if (Ext.isIE9m || !Ext.os.is.Desktop) {
+            Ext.suspendLayouts();
+
+            refs.pollLogo.setWidth(new_width);
+
+            navigationList.setWidth(new_width);
+            navigationList.setMicro(collapsing);
+
+            Ext.resumeLayouts();
+
+            wrapContainer.layout.animatePolicy = wrapContainer.layout.animate = null;
+            wrapContainer.updateLayout();
         }
-        this.changeCard('home');
+        else {
+            if (!collapsing) {
+
+                navigationList.setMicro(false);
+            }
+            navigationList.canMeasure = false;
+
+            refs.pollLogo.animate({dynamic: true, to: {width: new_width}});
+
+
+            navigationList.width = new_width;
+            wrapContainer.updateLayout({isRoot: true});
+            navigationList.el.addCls('nav-tree-animating');
+
+            if (collapsing) {
+                navigationList.on({
+                    afterlayoutanimation: function () {
+                        navigationList.setMicro(true);
+                        navigationList.el.removeCls('nav-tree-animating');
+                        navigationList.canMeasure = true;
+                    },
+                    single: true
+                });
+            }
+        }
+    },
+
+    onMainViewRender: function () {
+        if (window.location.hash.indexOf('activation') !== -1) {
+            const regex = /#activation\/([a-zA-Z0-9-]*)\/(.*)/g;
+            const str = window.location.hash;
+            var m;
+            var mail = null;
+            var mail_activation = null;
+
+            while ((m = regex.exec(str)) !== null) {
+                // This is necessary to avoid infinite loops with zero-width matches
+                if (m.index === regex.lastIndex) {
+                    regex.lastIndex++;
+                }
+
+                // The result can be accessed through the `m`-variable.
+                m.forEach(function (match, groupIndex) {
+                    if (groupIndex == 1) {
+                        mail_activation = match;
+                    }
+                    if (groupIndex == 2) {
+                        mail = match;
+                    }
+                });
+            }
+
+            if (mail && mail_activation) {
+                var me = this,
+                    params = {
+                        "email": mail,
+                        "activation_key": mail_activation
+                    };
+                Ext.Ajax.request({
+                    url: 'api/activation',
+                    method: "POST",
+                    params: Ext.util.JSON.encode(params),
+                    defaultHeaders: {'Content-Type': 'application/json'},
+                    success: function (response, opts) {
+                        var obj = Ext.decode(response.responseText);
+                        if (obj.success) {
+                            Ext.toast('Użytkownik został aktywowany pomyślnie', 'Sukces', 't');
+                            this.redirectTo("login");
+                        } else {
+                            Ext.toast('Nie udało się aktywować użytkownika', 'Błąd', 't')
+                            me.redirectTo('home');
+                        }
+                    },
+                    failure: function (response, opts) {
+                        Ext.toast('Nie udało się aktywować użytkownika', 'Błąd', 't')
+                        me.redirectTo('home');
+                    }
+                });
+            }
+
+        } else {
+            if (PP.util.Security.checkCookieToken()) {
+                PP.util.Security.initToken(Ext.util.Cookies.get('auth'));
+                Ext.toast('Zalogowano do aplikacji pomyślnie.', 'Sukces', 't');
+                this.redirectTo("home-logged");
+            } else {
+                if (window.location.hash === "#home") {
+                    this.redirectTo("home");
+                } else if (window.location.hash === "#login") {
+                    this.redirectTo("login");
+                } else if (window.location.hash === "#register") {
+                    this.redirectTo("register");
+                } else {
+                    this.redirectTo("home");
+                }
+
+            }
+        }
+    },
+
+    onRouteChange: function (id) {
+        this.setCurrentView(id);
     }
 });
