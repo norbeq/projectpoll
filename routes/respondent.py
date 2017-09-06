@@ -2,6 +2,7 @@ from flask import Blueprint, session, request, current_app as app
 from model.respondent import Respondent
 from model.form import Form
 from model.form_question import FormQuestion
+from model.user import User
 from model.form_question_answer import FormQuestionAnswer
 from model.respondent_vote import RespondentVote
 from util.http_response import JsonResponse, BadRequestResponse
@@ -11,6 +12,7 @@ from sqlalchemy import text
 import datetime
 import math
 from flask_socketio import emit
+from flask_mail import Mail, Message
 
 respondent_api = Blueprint('respondent_api', __name__)
 
@@ -48,7 +50,7 @@ def respondent_start():
 
     form = Form.query.filter_by(form_uuid=form_uuid, active=True, deleted=False).first()
     if not form:
-        return BadRequestResponse(obj={"success": False})
+        return BadRequestResponse(obj={"success": False, "message": "Not form"})
 
     if form.cookie_restriction is True:
         user_exists = Respondent.query.filter_by(ip_address=request.remote_addr, form_id=form.id).first()
@@ -67,8 +69,6 @@ def respondent_start():
     if form.ip_address_restriction is True and form.ip_address != request.remote_addr:
         data = {"success": True, "ip_address_restricted": True}
         return JsonResponse(data)
-
-
 
     respondent = Respondent(form_id=form.id)
     respondent.os_platform = request.user_agent.platform
@@ -95,10 +95,10 @@ def respondent_question(guest_uuid):
 
     if form.order == "position":
         sql = text(
-            'select fq.id, fq.name, fq.description, fq.type from form_question fq WHERE id not in (select form_question_id from respondent_vote rv join respondent r ON r.id=rv.respondent_id WHERE r.guest_uuid=:uuid) AND fq.id in (select form_question_id from form_question_answer) ORDER BY fq.position ASC limit 1')
+            'select fq.id, fq.name, fq.description, fq.type from form_question fq WHERE id not in (select form_question_id from respondent_vote rv join respondent r ON r.id=rv.respondent_id WHERE r.guest_uuid=:uuid) ORDER BY fq.position ASC limit 1')
     else:
         sql = text(
-            'select fq.id, fq.name, fq.description, fq.type from form_question fq WHERE id not in (select form_question_id from respondent_vote rv join respondent r ON r.id=rv.respondent_id WHERE r.guest_uuid=:uuid) AND fq.id in (select form_question_id from form_question_answer) ORDER BY rand() ASC limit 1')
+            'select fq.id, fq.name, fq.description, fq.type from form_question fq WHERE id not in (select form_question_id from respondent_vote rv join respondent r ON r.id=rv.respondent_id WHERE r.guest_uuid=:uuid) ORDER BY rand() ASC limit 1')
     result = db.engine.execute(sql, {'uuid': guest_uuid}).fetchone()
 
     if result:
@@ -124,6 +124,19 @@ def respondent_question(guest_uuid):
         respondent.end_date = str(now.strftime("%Y-%m-%d %H:%M:%S"))
         db.session.commit()
 
+        if form.completion_notify:
+            user = User.query.filter_by(id=form.user_id).first()
+            if not user:
+                return BadRequestResponse({"success": False, "message": "Not user"})
+
+            mail = Mail(app)
+            msg = Message('Nowe wypełnienie formularza poll.mianor.pl',
+                          sender=app.config['mail_conf']['sender'],
+                          recipients=[user.email])
+
+            msg.body = "Formularz o nazwie {} został właśnie w pełni wypełniony przez respondenta.".format(form.name)
+            mail.send(msg)
+
         data = {"success": True, "data": None}
         return JsonResponse(data)
 
@@ -140,21 +153,29 @@ def respondent_question_vote(guest_uuid):
 
     respondent = Respondent.query.filter_by(guest_uuid=guest_uuid).first()
     if not respondent:
-        return BadRequestResponse(obj={"success": False})
+        return BadRequestResponse(obj={"success": False, "message": "No respondent"})
 
     form = Form.query.filter_by(id=respondent.form_id, active=True, deleted=False).first()
     if not form:
+        return BadRequestResponse(obj={"success": False, "message": "No form"})
+
+    question = FormQuestion.query.filter_by(id=body.get('question_id'), form_id=form.id).first()
+    if not question:
         return BadRequestResponse(obj={"success": False})
 
-    respondent_vote = RespondentVote(respondent.id, body.get('question_id'), form.id, custom_answer=None,
-                                     form_question_answer_id=body.get('answer'))
+    if question.type == "custom":
+        respondent_vote = RespondentVote(respondent.id, body.get('question_id'), form.id, custom_answer=body.get('answer'))
+    else:
+        respondent_vote = RespondentVote(respondent.id, body.get('question_id'), form.id, custom_answer=None,
+                                         form_question_answer_id=body.get('answer'))
+
 
     db.session.add(respondent_vote)
     db.session.commit()
 
     if form.user_id in app.sockets:
-        emit('vote', {'question_id': body.get('question_id'), 'form_id': form.id,
-                      'form_question_answer_id': body.get('answer')}, namespace="/", room=app.sockets[form.user_id])
+        emit('vote', {'form_question_id': respondent_vote.form_question_id, 'form_id': respondent_vote.form_id, 'respondent_id': respondent_vote.respondent_id,
+                      'form_question_answer_id': respondent_vote.form_question_answer_id, 'custom_answer': respondent_vote.custom_answer}, namespace="/", room=app.sockets[form.user_id])
 
     data = {"success": True}
     return JsonResponse(data)
