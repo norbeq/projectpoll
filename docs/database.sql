@@ -165,6 +165,7 @@ CREATE TABLE IF NOT EXISTS `poll`.`respondent_vote` (
   INDEX `fk_form_vote_form1_idx` (`form_id` ASC),
   INDEX `fk_form_vote_respondent1_idx` (`respondent_id` ASC),
   INDEX `fk_respondent_vote_form_question_answer1_idx` (`form_question_answer_id` ASC),
+  UNIQUE INDEX `UNIQUE_respondent_form_question` (`respondent_id` ASC, `form_id` ASC, `form_question_id` ASC),
   CONSTRAINT `fk_form_vote_form_question1`
     FOREIGN KEY (`form_question_id`)
     REFERENCES `poll`.`form_question` (`id`)
