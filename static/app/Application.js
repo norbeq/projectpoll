@@ -1,62 +1,132 @@
-/**
- * The main application class. An instance of this class is created by app.js when it
- * calls Ext.application(). This is the ideal place to handle application launch and
- * initialization details.
- */
 Ext.define('PP.Application', {
     extend: 'Ext.app.Application',
 
     name: 'PP',
 
-    controllers: [
-        'Main', 'Login'
+    stores: [
+        'NavigationTree',
+        'Pages',
+        'Forms',
+        'RespondentInfo'
     ],
 
-    stores: [
-
+    models: [
+        "PollInfo"
     ],
 
     requires: [
-        'Ext.form.Panel',
-        'Ext.util.History',
-        'Ext.ux.layout.ResponsiveColumn'
+        "PP.util.SocketIO",
+        "PP.util.Security",
+        "Ext.button.Segmented",
+        "Ext.list.Tree",
+        //charts
+        "Ext.chart.PolarChart",
+        //proxy
+        "PP.proxy.API",
+        //layouts
+        "Ext.layout.container.HBox",
+        "Ext.layout.container.VBox",
+        "Ext.button.Button",
+        "Ext.container.Container",
+        "Ext.form.Label",
+        "Ext.form.field.Text",
+        "Ext.form.field.Checkbox",
+        "Ext.toolbar.Spacer",
+        "Ext.chart.interactions.ItemHighlight",
+        "Ext.grid.plugin.RowExpander"
     ],
 
-    launchLoginForm: function () {
-        this.mainView = Ext.create('Ext.container.Viewport', {
-            renderTo: Ext.getBody(),
-            items: [{
-                layout: "fit",
-                xtype: 'login'
-            }]
-        });
-    },
+    views: [
+        //Main
+        "main.Main",
+        "main.MainController",
+        "main.MainContainerWrap",
+        "main.MainModel",
+        //Home
+        "home.Home",
+        "home.HomeController",
+        "home.Services",
+        "home.HomeModel",
+        "home.HomeLogged",
+        //Authentication
+        "authentication.Login",
+        "authentication.Dialog",
+        "authentication.Register",
+        "authentication.AuthenticationModel",
+        "authentication.AuthenticationController",
+        "authentication.PasswordReset",
+        //Faq
+        "pages.FAQ",
+        //Forms
+        "form.Forms",
+        "form.FormController",
+        //Poll
+        "poll.Poll",
+        "poll.PollController"
+    ],
 
     launchMain: function () {
-        console.log('launch main');
-        Ext.create('PP.view.main.Main',{
+        Ext.create('PP.view.main.Main', {
             id: 'main'
         });
     },
 
-    launchRegister: function () {
-        // this.mainView = Ext.create('PP.view.register.Register');
+    launchPoll: function () {
+        var me = this;
+
+        const regex = /#poll\/([a-zA-Z0-9-]*)/g;
+        const str = window.location.hash;
+        var m;
+        var form_uuid = null;
+
+        while ((m = regex.exec(str)) !== null) {
+            if (m.index === regex.lastIndex) {
+                regex.lastIndex++;
+            }
+            m.forEach(function (match, groupIndex) {
+                if (groupIndex == 1) {
+                    form_uuid = match;
+                }
+            });
+        }
+
+        if (form_uuid) {
+            Ext.Ajax.request({
+                url: 'api/respondent/start',
+                method: "POST",
+                params: Ext.util.JSON.encode({"form_uuid": form_uuid}),
+                defaultHeaders: {'Content-Type': 'application/json'},
+                success: function (response, opts) {
+                    var obj = Ext.decode(response.responseText);
+                    if (obj.success) {
+                        Ext.create('PP.view.poll.Poll', {
+                            id: 'poll',
+                            guest_uuid: obj.data.guest_uuid,
+                        }).mask();
+                    } else {
+                        window.location.href = window.location.origin + "/#home";
+                    }
+                },
+                failure: function (response, opts) {
+                    window.location.href = window.location.origin + "/#home";
+                }
+            });
+        }
+
+
     },
 
     launch: function () {
-        Ext.History.init();
-        var getParams = document.URL.split("?");
-        var params = Ext.urlDecode(getParams[getParams.length - 1]);
+        if (window.location.hash.indexOf('poll') !== -1) {
+            this.launchPoll();
+        } else {
+            this.launchMain();
+        }
 
-        // if(params['register'] !== undefined){
-        //     this.launchRegister();
-        // } else {
-        this.launchMain();
-        // }
     },
 
     onAppUpdate: function () {
-        Ext.Msg.confirm('Application Update', 'This application has an update, reload?',
+        Ext.Msg.confirm('Aktualizacja aplikacji', 'Aplikacja została zaktualizowana, przeładować?',
             function (choice) {
                 if (choice === 'yes') {
                     window.location.reload();
@@ -64,4 +134,5 @@ Ext.define('PP.Application', {
             }
         );
     }
-});
+})
+;

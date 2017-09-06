@@ -5,21 +5,28 @@ Ext.define('PP.view.authentication.AuthenticationController', {
 
     onLoggedIn: function (token) {
         PP.util.Security.initToken(token);
-        Ext.util.Cookies.set("auth",token);
-        Ext.toast('Zalogowano do aplikacji pomyślnie.', 'Sukces', 't');
-
-        Ext.getStore('NavigationTree').getRootNode().insertChild(0, {
-            text: 'Strona główna',
-            iconCls: 'x-fa fa-desktop',
-            rowCls: 'nav-tree-badge nav-tree-badge-new',
-            viewType: 'home-logged',
-            leaf: true
-        });
-        Ext.getStore('NavigationTree').getRootNode().findChild("viewType", "home").remove();
-        Ext.getStore('NavigationTree').getRootNode().findChild("viewType", "login").remove();
-
-        Ext.getCmp('main').getViewModel().set('username', PP.util.Security.payload.username);
+        Ext.util.Cookies.set("auth", token);
+        PP.util.Toast.show('Zalogowano do aplikacji pomyślnie.', 'Sukces', 't');
         this.redirectTo('home-logged', true);
+    },
+
+    onResetClick: function () {
+        var me = this,
+            params = {
+                "email": this.lookup('reset_email').getValue()
+            };
+        Ext.Ajax.request({
+            url: 'api/reset',
+            method: "POST",
+            params: Ext.util.JSON.encode(params),
+            defaultHeaders: {'Content-Type': 'application/json'},
+            success: function (response, opts) {
+                PP.util.Toast.show('Hasło zostało wysłane na podany adres email', 'Błąd', 't')
+            },
+            failure: function (response, opts) {
+                PP.util.Toast.show('Błąd resetowania hasła', 'Błąd', 't')
+            }
+        });
     },
 
     onLoginButton: function () {
@@ -46,12 +53,12 @@ Ext.define('PP.view.authentication.AuthenticationController', {
 
                     },
                     failure: function (response, opts) {
-                        Ext.toast('Błąd autentykacji.', 'Błąd', 't')
+                        PP.util.Toast.show('Błąd autentykacji.', 'Błąd', 't')
                     }
                 });
             },
             failure: function (response, opts) {
-                Ext.toast('Błąd autentykacji.', 'Błąd', 't')
+                PP.util.Toast.show('Błąd autentykacji.', 'Błąd', 't')
             }
         });
     },
@@ -78,20 +85,17 @@ Ext.define('PP.view.authentication.AuthenticationController', {
             defaultHeaders: {'Content-Type': 'application/json'},
             success: function (response, opts) {
                 var obj = Ext.decode(response.responseText);
-                if(obj.success) {
-                    Ext.toast('Udało się', 'Sukces', 't');
+                if (obj.success) {
+                    PP.util.Toast.show('Udało się', 'Sukces', 't');
                     me.redirectTo('login', true);
                 } else {
-                    Ext.toast('Błąd rejestracji.', 'Błąd', 't')
+                    PP.util.Toast.show('Błąd rejestracji.', 'Błąd', 't')
                 }
             },
             failure: function (response, opts) {
-                Ext.toast('Błąd rejestracji.', 'Błąd', 't')
+                PP.util.Toast.show('Błąd rejestracji.', 'Błąd', 't')
             }
         });
-    },
 
-    onResetClick: function () {
-        this.redirectTo('home', true);
     }
 });

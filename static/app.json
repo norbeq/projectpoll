@@ -67,8 +67,11 @@
     "requires": [
         "font-awesome",
         "ux",
-        "charts"
+        "charts",
+        "ext-locale"
     ],
+
+    "locale": "pl",
 
     /**
      * Fashion build configuration properties.
@@ -234,6 +237,15 @@
         {
             "path": "app.js",
             "bundle": true
+        },
+        {
+            "path": "resources/js/socket.io.js"
+        },
+        {
+            "path": "resources/js/jwt-decode.min.js"
+        },
+        {
+            "path": "resources/js/sha512.min.js"
         }
     ],
 

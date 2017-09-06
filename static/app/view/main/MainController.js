@@ -19,7 +19,7 @@ Ext.define('PP.view.main.MainController', {
     setCurrentView: function (hashTag) {
         hashTag = (hashTag || '').toLowerCase();
 
-        if (["home", 'login', 'register', 'activation', ''].indexOf(hashTag) > -1 || PP.util.Security.checkCookieToken()) {
+        if (["home", 'login', 'register', 'activation', 'passwordreset', ''].indexOf(hashTag) > -1 || PP.util.Security.checkCookieToken()) {
 
             var me = this,
                 refs = me.getReferences(),
@@ -145,12 +145,9 @@ Ext.define('PP.view.main.MainController', {
             var mail_activation = null;
 
             while ((m = regex.exec(str)) !== null) {
-                // This is necessary to avoid infinite loops with zero-width matches
                 if (m.index === regex.lastIndex) {
                     regex.lastIndex++;
                 }
-
-                // The result can be accessed through the `m`-variable.
                 m.forEach(function (match, groupIndex) {
                     if (groupIndex == 1) {
                         mail_activation = match;
@@ -175,24 +172,23 @@ Ext.define('PP.view.main.MainController', {
                     success: function (response, opts) {
                         var obj = Ext.decode(response.responseText);
                         if (obj.success) {
-                            Ext.toast('Użytkownik został aktywowany pomyślnie', 'Sukces', 't');
-                            this.redirectTo("login");
+                            PP.util.Toast.show('Użytkownik został aktywowany pomyślnie', 'Sukces', 't');
+                            me.redirectTo("login");
                         } else {
-                            Ext.toast('Nie udało się aktywować użytkownika', 'Błąd', 't')
+                            PP.util.Toast.show('Nie udało się aktywować użytkownika', 'Błąd', 't')
                             me.redirectTo('home');
                         }
                     },
                     failure: function (response, opts) {
-                        Ext.toast('Nie udało się aktywować użytkownika', 'Błąd', 't')
+                        PP.util.Toast.show('Nie udało się aktywować użytkownika', 'Błąd', 't')
                         me.redirectTo('home');
                     }
                 });
             }
-
         } else {
             if (PP.util.Security.checkCookieToken()) {
                 PP.util.Security.initToken(Ext.util.Cookies.get('auth'));
-                Ext.toast('Zalogowano do aplikacji pomyślnie.', 'Sukces', 't');
+                PP.util.Toast.show('Zalogowano do aplikacji pomyślnie.', 'Sukces', 't');
                 this.redirectTo("home-logged");
             } else {
                 if (window.location.hash === "#home") {
@@ -201,6 +197,8 @@ Ext.define('PP.view.main.MainController', {
                     this.redirectTo("login");
                 } else if (window.location.hash === "#register") {
                     this.redirectTo("register");
+                } else if (window.location.hash === "#passwordreset") {
+                    this.redirectTo("passwordreset");
                 } else {
                     this.redirectTo("home");
                 }

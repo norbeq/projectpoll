@@ -29,6 +29,11 @@ Ext.define('PP.util.SocketIO', {
         me.socket.on('message', function (data) {
             me.message(data);
         });
+
+        me.socket.on('vote', function (data) {
+            console.log("Przyszedl vote");
+            console.log(data);
+        });
     },
 
     message: function (data) {
