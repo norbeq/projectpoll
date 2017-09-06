@@ -104,6 +104,7 @@ Ext.define('PP.view.poll.PollController', {
             padding: 30,
             html: "<h1><center>Dziękujemy za wypełnienie ankiety.</center></h1>"
         });
+        this.lookup('next_button').disable();
     },
 
     getQuestion: function () {

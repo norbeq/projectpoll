@@ -31,6 +31,7 @@ Ext.define('PP.view.poll.Poll', {
             padding: 5,
             width: "100%",
             items: [{
+                reference: "next_button",
                 xtype: "button",
                 text: "Dalej",
                 height: "100%",

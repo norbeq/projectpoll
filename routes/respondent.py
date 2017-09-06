@@ -42,12 +42,33 @@ def respondent_start():
         return BadRequestResponse({"success": False, "message": "Wrong json"})
 
     form_uuid = body.get('form_uuid')
+    password = body.get('password')
     if not form_uuid:
         return BadRequestResponse({"success": False, "message": "Form uuid required"})
 
     form = Form.query.filter_by(form_uuid=form_uuid, active=True, deleted=False).first()
     if not form:
         return BadRequestResponse(obj={"success": False})
+
+    if form.cookie_restriction is True:
+        user_exists = Respondent.query.filter_by(ip_address=request.remote_addr, form_id=form.id).first()
+        if user_exists:
+            data = {"success": True, "restricted": True}
+            return JsonResponse(data)
+
+    if form.password_restriction is True and not password:
+        data = {"success": True, "password_needed": True}
+        return JsonResponse(data)
+
+    if form.password_restriction is True and password != form.password:
+        data = {"success": True, "password_needed": True}
+        return JsonResponse(data)
+
+    if form.ip_address_restriction is True and form.ip_address != request.remote_addr:
+        data = {"success": True, "ip_address_restricted": True}
+        return JsonResponse(data)
+
+
 
     respondent = Respondent(form_id=form.id)
     respondent.os_platform = request.user_agent.platform
@@ -57,7 +78,7 @@ def respondent_start():
     db.session.add(respondent)
     db.session.commit()
     res_data = {"guest_uuid": respondent.guest_uuid}
-    data = {"success": True, "data": res_data}
+    data = {"success": True, "password_needed": False, "data": res_data}
 
     return JsonResponse(data)
 
@@ -73,9 +94,11 @@ def respondent_question(guest_uuid):
         return BadRequestResponse(obj={"success": False})
 
     if form.order == "position":
-        sql = text('select fq.id, fq.name, fq.description, fq.type from form_question fq WHERE id not in (select form_question_id from respondent_vote rv join respondent r ON r.id=rv.respondent_id WHERE r.guest_uuid=:uuid) AND fq.id in (select form_question_id from form_question_answer) ORDER BY fq.position ASC limit 1')
+        sql = text(
+            'select fq.id, fq.name, fq.description, fq.type from form_question fq WHERE id not in (select form_question_id from respondent_vote rv join respondent r ON r.id=rv.respondent_id WHERE r.guest_uuid=:uuid) AND fq.id in (select form_question_id from form_question_answer) ORDER BY fq.position ASC limit 1')
     else:
-        sql = text('select fq.id, fq.name, fq.description, fq.type from form_question fq WHERE id not in (select form_question_id from respondent_vote rv join respondent r ON r.id=rv.respondent_id WHERE r.guest_uuid=:uuid) AND fq.id in (select form_question_id from form_question_answer) ORDER BY rand() ASC limit 1')
+        sql = text(
+            'select fq.id, fq.name, fq.description, fq.type from form_question fq WHERE id not in (select form_question_id from respondent_vote rv join respondent r ON r.id=rv.respondent_id WHERE r.guest_uuid=:uuid) AND fq.id in (select form_question_id from form_question_answer) ORDER BY rand() ASC limit 1')
     result = db.engine.execute(sql, {'uuid': guest_uuid}).fetchone()
 
     if result:

@@ -7,6 +7,7 @@ from routes.form import form_api
 from routes.respondent import respondent_api
 from routes.activation import activation_api
 from routes.password_reset import password_reset_api
+from routes.static import static_api
 from model.model import db
 from jose import jwt
 from config import token, db_conf, mail_conf, http_url
