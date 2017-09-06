@@ -1,12 +1,13 @@
-from flask import Blueprint, send_from_directory, request, json, Flask, current_app as app
+from flask import Blueprint, request, current_app as app
 from model.user import User
 from model.authentication import Authentication
 from model.model import db
 import uuid
 import hashlib
-import jwt
+from jose import jwt
 import datetime
-from util.http_response import ForbiddenResponse, JsonResponse, BadRequestResponse
+from util.http_response import ForbiddenResponse, JsonResponse, BadRequestResponse, AuthenticationFailureResponse, InternalServerErrorResponse
+from util.auth import authentication
 
 login_api = Blueprint('login_api', __name__)
 
@@ -20,7 +21,7 @@ def login():
     email = body.get('email')
     digest = body.get('digest')
 
-    user = User.query.filter_by(email=email).first()
+    user = User.query.filter_by(email=email, active=True).first()
     if user is None:
         return ForbiddenResponse(obj={"success": False})
 
@@ -47,10 +48,11 @@ def login():
         'email': user.email,
         'token_uuid': str(token_uuid),
         'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=app.config['token']['expiration_seconds']),
-        'iat': datetime.datetime.utcnow(),
         'iss': app.config['token']['iss']
     }
+
     token = jwt.encode(token_payload, app.config['token']['key'], algorithm='HS256')
+
     data = {"success": True, "token": str(token)}
     return JsonResponse(data)
 
@@ -68,9 +70,20 @@ def pre_login():
     if user is None:
         return ForbiddenResponse(obj={"success": False})
 
-    authentication = Authentication(user.id, salt, 'salt')
-    db.session.add(authentication)
-    db.session.commit()
+    try:
+        authentication = Authentication(user.id, salt, 'salt')
+        db.session.add(authentication)
+        db.session.commit()
+    except:
+        return InternalServerErrorResponse()
 
     data = {"success": True, "salt": salt}
+    return JsonResponse(data)
+
+@login_api.route('/check_token', methods=['GET'])
+def check_token():
+    if authentication(request) == False:
+        return AuthenticationFailureResponse()
+
+    data = {"success": True}
     return JsonResponse(data)
