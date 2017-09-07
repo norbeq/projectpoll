@@ -2,6 +2,81 @@ Ext.define('PP.view.form.FormController', {
     extend: 'Ext.app.ViewController',
     alias: 'controller.form',
 
+    report_csv: function (grid, rowIndex) {
+        var rec = grid.getStore().getAt(rowIndex);
+        Ext.Ajax.request({
+            url: 'api/form/' + rec.id + '/votes',
+            method: "GET",
+            defaultHeaders: {'Content-Type': 'application/json', 'auth': Ext.util.Cookies.get('auth')},
+            success: function (response, opts) {
+                var obj = Ext.decode(response.responseText);
+                if (obj.success) {
+                    var content = "Zagregowane dane:\r\nPytanie;Odpowiedź;Ilość\r\n";
+                    Ext.Array.forEach(obj.question_answers_grouped, function (q) {
+                        if (q.form_question_answer_id !== null) {
+                            content += q.form_question_name + ";" + q.answer + ";" + q.count + "\r\n";
+                        }
+                    });
+                    content += "\r\nOdpowiedzi opisowe\r\nPytanie;Odpowiedź\r\n";
+                    Ext.Array.forEach(obj.question_answers_grouped, function (q) {
+                        if (q.form_question_answer_id === null) {
+                            content += q.form_question_name + ";" + q.custom_answer + "\r\n";
+                        }
+                    });
+                    content += "\r\nOdpowiedzi respondentów\r\n";
+                    Ext.iterate(obj.respondents, function (_, respondent) {
+                        content += "Data rozpoczęcia:;" + respondent.start_date + ";Data zakończenia:;" + respondent.end_date + "\r\n";
+                        Ext.iterate(respondent.answers, function (quest, ans) {
+                            content += quest + ";" + ans + "\r\n";
+                        });
+                        content += "=====================\r\n";
+                    });
+                    var a = new Blob([content], {type: "application/octet-stream;"})
+                    saveAs(a, Ext.String.format("{0}.csv", rec.get('name')));
+                }
+
+            }
+        });
+    },
+
+    report_html: function (grid, rowIndex) {
+        var rec = grid.getStore().getAt(rowIndex);
+        Ext.Ajax.request({
+            url: 'api/form/' + rec.id + '/votes',
+            method: "GET",
+            defaultHeaders: {'Content-Type': 'application/json', 'auth': Ext.util.Cookies.get('auth')},
+            success: function (response, opts) {
+                var obj = Ext.decode(response.responseText);
+                if (obj.success) {
+                    var content = "<table><tr style='background-color:#4985ff'><td>Zagregowane dane:</td></tr><tr style='background-color:#6dafff'><td>Pytanie</td><td>Odpowiedź</td><td>Ilość</td></tr>";
+                    Ext.Array.forEach(obj.question_answers_grouped, function (q) {
+                        if (q.form_question_answer_id !== null) {
+                            content += "<tr><td>" + q.form_question_name + "</td><td>" + q.answer + "</td><td>" + q.count + "</td></tr>";
+                        }
+                    });
+                    content += "</table><table><tr style='background-color:#4985ff'><td>Odpowiedzi opisowe</td></tr><tr><td>Pytanie</td><td>Odpowiedź</td></tr>";
+                    Ext.Array.forEach(obj.question_answers_grouped, function (q) {
+                        if (q.form_question_answer_id === null) {
+                            content += "<tr><td>" + q.form_question_name + "</td><td>" + q.custom_answer + "</td></tr>";
+                        }
+                    });
+                    content+="</table>";
+                    content += "<font color='#4985ff'><b>Odpowiedzi respondentów</b></font>";
+                    Ext.iterate(obj.respondents, function (_, respondent) {
+                        content += "<table style='border: 1px solid black;'><tr style='background-color:#8aff92'><td>Data rozpoczęcia</td><td>" + respondent.start_date + "</td><td>Data zakończenia</td><td>" + respondent.end_date + "</td></tr>";
+                        Ext.iterate(respondent.answers, function (quest, ans) {
+                            content += "<tr><td>"+quest + "</td><td>" + ans + "</td></tr>";
+                        });
+                        content += "</table>";
+                    });
+                    var a = new Blob([content], {type: "text/html"})
+                    saveAs(a, Ext.String.format("{0}.html", rec.get('name')));
+                }
+
+            }
+        });
+    },
+
     monitoring: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);
 

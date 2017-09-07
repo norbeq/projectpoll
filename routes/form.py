@@ -326,14 +326,21 @@ def form_votes(form_id):
         # RespondentVote.query.join(FormQuestionAnswer, RespondentVote.form_question_answer_id==FormQuestionAnswer.id).\
         # add_columns(FormQuestionAnswer.name).join(FormQuestion, RespondentVote.form_question_id==FormQuestion.id).add_columns(FormQuestion.name).filter(RespondentVote.form_id == form_id)
 
-    respondent_votes = RespondentVote.query.join(FormQuestionAnswer, RespondentVote.form_question_answer_id==FormQuestionAnswer.id).add_columns(FormQuestionAnswer.name).join(FormQuestion, RespondentVote.form_question_id==FormQuestion.id).add_columns(FormQuestion.name).join(Respondent, RespondentVote.respondent_id==Respondent.id).add_columns(Respondent.completed).filter(RespondentVote.form_id == form_id).all()
+    respondent_votes = RespondentVote.query.join(FormQuestionAnswer, RespondentVote.form_question_answer_id==FormQuestionAnswer.id).add_columns(FormQuestionAnswer.name).join(FormQuestion, RespondentVote.form_question_id==FormQuestion.id).add_columns(FormQuestion.name).join(Respondent, RespondentVote.respondent_id==Respondent.id).add_columns(Respondent.completed, Respondent.start_date, Respondent.end_date).filter(RespondentVote.form_id == form_id).all()
     respondents = {}
     # print(respondent_votes)
     for p in respondent_votes:
         q = p[0]
+        print(p)
 
         if not q.respondent_id in respondents:
             respondents[q.respondent_id] = {}
+
+        respondents[q.respondent_id]['start_date'] = str(p[4])
+        if p[5] is not None:
+            respondents[q.respondent_id]['end_date'] = str(p[5])
+        else:
+            respondents[q.respondent_id]['end_date'] = ""
 
         if not 'answers' in respondents[q.respondent_id]:
             respondents[q.respondent_id]['answers'] = {}
