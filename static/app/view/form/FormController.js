@@ -119,7 +119,7 @@ Ext.define('PP.view.form.FormController', {
                         });
                         respondents.push(a);
 
-                        if(a.completed){
+                        if (a.completed) {
                             completed_respondents.push(a);
                         }
                     });
@@ -206,7 +206,7 @@ Ext.define('PP.view.form.FormController', {
                                     itemId: "current_question",
                                     listeners: {
                                         change: function (a, value) {
-                                            if(win.completed_respondents.length > 0) {
+                                            if (win.completed_respondents.length > 0) {
                                                 var decisionTree = new dt.DecisionTree({
                                                     trainingSet: win.completed_respondents,
                                                     categoryAttr: value,
@@ -621,12 +621,19 @@ Ext.define('PP.view.form.FormController', {
                     flex: 1,
                     dataIndex: 'name'
                 }, {
-                    text: 'Description',
-                    dataIndex: 'opis'
+                    text: 'Opis',
+                    dataIndex: 'description'
                 }, {
                     text: 'Rodzaj',
                     flex: 1,
-                    dataIndex: 'type'
+                    dataIndex: 'type',
+                    renderer: function (val, meta) {
+                        if (val == "custom") {
+                            return "Opis";
+                        } else {
+                            return "Wybór";
+                        }
+                    },
                 }, {
                     text: 'Pozycja',
                     flex: 1,
@@ -639,7 +646,14 @@ Ext.define('PP.view.form.FormController', {
                             return 'x-fa fa-check';
                         },
                         tooltip: 'Odpowiedzi',
-                        handler: "question_answers"
+                        handler: "question_answers",
+                        isDisabled: function (view, rowIndex, colIndex, item, record) {
+                            if (record.get('type') === "custom") {
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
                     }, {
                         getClass: function () {
                             return 'x-fa fa-trash';
