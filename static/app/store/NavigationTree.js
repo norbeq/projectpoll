@@ -24,10 +24,18 @@ Ext.define('PP.store.NavigationTree', {
             },
             {
                 text: 'Ankiety',
-                iconCls: 'x-fa fa-desktop',
+                iconCls: 'x-fa fa-area-chart',
                 rowCls: 'nav-tree-badge nav-tree-badge-new',
                 viewType: 'forms',
                 routeId: 'forms',
+                leaf: true
+            },
+            {
+                text: 'Ustawienia',
+                iconCls: 'x-fa fa-cog',
+                rowCls: 'nav-tree-badge nav-tree-badge-new',
+                viewType: 'settings',
+                routeId: 'settings',
                 leaf: true
             }
             // ,
