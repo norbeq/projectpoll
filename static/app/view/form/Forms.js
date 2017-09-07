@@ -125,14 +125,26 @@ Ext.define('PP.view.form.Forms', {
                     },
                     {
                         xtype: 'actioncolumn',
-                        width: 110,
+                        width: 160,
                         items: [{
                             getClass: function () {
                                 return 'x-fa fa-television';
                             },
                             tooltip: 'Monitoruj',
                             handler: "monitoring"
-                        },{
+                        }, {
+                            getClass: function () {
+                                return 'x-fa fa-file-text-o';
+                            },
+                            tooltip: 'Raport CSV',
+                            handler: "report_csv"
+                        }, {
+                            getClass: function () {
+                                return 'x-fa fa-file-code-o';
+                            },
+                            tooltip: 'Raport HTML',
+                            handler: "report_html"
+                        }, {
                             getClass: function () {
                                 return 'x-fa fa-cog';
                             },
