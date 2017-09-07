@@ -50,7 +50,7 @@ Ext.define('PP.view.form.Forms', {
                         text: 'Aktywna',
                         sortable: false,
                         hideable: false,
-                        dataIndex: 'name',
+                        dataIndex: 'active',
                         renderer: function (val, meta) {
                             if (val == true) {
                                 return "Tak";

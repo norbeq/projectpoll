@@ -2,6 +2,246 @@ Ext.define('PP.view.form.FormController', {
     extend: 'Ext.app.ViewController',
     alias: 'controller.form',
 
+    monitoring: function (grid, rowIndex) {
+        var rec = grid.getStore().getAt(rowIndex);
+
+        Ext.Ajax.request({
+            url: 'api/form/' + rec.id + '/votes',
+            method: "GET",
+            defaultHeaders: {'Content-Type': 'application/json', 'auth': Ext.util.Cookies.get('auth')},
+            success: function (response, opts) {
+                var obj = Ext.decode(response.responseText);
+                if (obj.success) {
+
+
+                    var question_answer_store = Ext.create('Ext.data.Store', {
+                        storeId: 'poll_questions_answer_' + rec.id,
+                        data: obj.question_answers_grouped,
+                        fields: [
+                            {name: "form_question_id", type: "int"},
+                            {name: "form_question_answer_id", type: "int", allowNull: true},
+                            {name: "form_question_name", type: "string"},
+                            {name: "answer", type: "string"},
+                            {name: "custom_answer", type: "string", allowNull: true},
+                            {name: "count", type: "int"}
+                        ]
+                    });
+
+                    var questions = [];
+                    var question_charts = [];
+                    Ext.iterate(obj.questions, function (_, question) {
+                        questions.push(question);
+                        if (question.type === "select") {
+                            var ss = Ext.create("Ext.data.ChainedStore", {
+                                source: question_answer_store,
+                                filters: [function (item) {
+                                    return item.get('form_question_id') == question.id;
+                                }]
+                            });
+                            question_charts.push({
+                                innerPadding: 10,
+                                xtype: 'polar',
+                                height: 350,
+                                store: ss,
+                                background: '#f6f6f6',
+                                legend: {
+                                    type: 'sprite',
+                                    docked: 'bottom',
+                                    background: '#f6f6f6'
+                                },
+                                title: question.name,
+                                tools: [{
+                                    type: 'print',
+                                    tooltip: 'Zapisz wykres',
+                                    callback: function (panel, tool, event) {
+                                        panel.download();
+                                    }
+                                }],
+                                interactions: ['rotate', 'itemhighlight'],
+                                series: [{
+                                    type: 'pie',
+                                    animation: {
+                                        easing: 'easeOut',
+                                        duration: 500
+                                    },
+                                    opacity: 0.8,
+                                    donut: 30,
+                                    distortion: 0.60,
+                                    thickness: 10,
+                                    angleField: 'count',
+                                    clockwise: false,
+                                    highlight: {
+                                        margin: 20
+                                    },
+                                    label: {
+                                        field: 'answer',
+                                        display: 'outside',
+                                        fontSize: 16
+                                    },
+                                    style: {
+                                        strokeStyle: 'white',
+                                        lineWidth: 1
+                                    },
+                                    tooltip: {
+                                        trackMouse: true,
+                                        renderer: function (tooltip, record, item) {
+                                            tooltip.setHtml(record.get('answer') + ': ' + record.get('count'));
+                                        }
+                                    }
+                                }]
+                            });
+                        }
+                    });
+                    var question_store = Ext.create('Ext.data.Store', {
+                        storeId: 'poll_questions_' + rec.id,
+                        data: questions,
+                        fields: [
+                            {name: "id", type: "int"},
+                            {name: "name", type: "string"},
+                            {name: "description", type: "string"},
+                            {name: "type", type: "string"},
+                            {name: "answers", type: "auto"}
+                        ]
+                    });
+
+
+                    // var answers = {};
+
+                    var respondents = [];
+                    Ext.iterate(obj.respondents, function (respondent_id, respondent) {
+                        var a = {};
+                        a.id = respondent_id;
+                        a.completed = respondent.completed;
+
+                        Ext.iterate(respondent.answers, function (key, val) {
+                            a[key] = val;
+                        });
+                        respondents.push(a);
+                    });
+
+                    var fields = [{name: 'id', type: 'int'}, {name: 'completed', type: 'boolean'}];
+                    Ext.Array.forEach(questions, function (q) {
+                        if (q.type === "select") {
+                            fields.push({name: q.name, type: 'int', allowNull: true});
+                        } else {
+                            fields.push({name: q.name, type: 'string', allowNull: true});
+                        }
+                    });
+
+
+                    var win = Ext.create('Ext.window.Window', {
+                        width: 800,
+                        treeToHtml: function (tree) {
+                            if (tree.category) {
+                                return ['<ul>',
+                                    '<li>',
+                                    '<a href="#">',
+                                    '<b>', tree.category, '</b>',
+                                    '</a>',
+                                    '</li>',
+                                    '</ul>'].join('');
+                            }
+
+                            return ['<ul>',
+                                '<li>',
+                                '<a href="#">',
+                                '<b>', tree.attribute, ' ', tree.predicateName, ' ', tree.pivot, ' ?</b>',
+                                '</a>',
+                                '<ul>',
+                                '<li>',
+                                '<a href="#">Tak</a>',
+                                win.treeToHtml(tree.match),
+                                '</li>',
+                                '<li>',
+                                '<a href="#">Nie</a>',
+                                win.treeToHtml(tree.notMatch),
+                                '</li>',
+                                '</ul>',
+                                '</li>',
+                                '</ul>'].join('');
+                        },
+                        respondents: respondents,
+                        height: 600,
+                        modal: true,
+                        defaults: {
+                            padding: 10
+                        },
+                        id: "form_monitoring",
+                        form_id: rec.get('id'),
+                        maximizable: true,
+                        title: "Monitoring " + rec.get("name"),
+                        border: false,
+                        resizable: true,
+                        constrainHeader: true,
+                        controller: "form",
+                        scrollable: true,
+                        layout: 'accordion',
+                        items: [{
+                            title: "Wykresy szczegółowe",
+                            scrollable: true,
+                            items: question_charts
+                        }, {
+                            title: "Drzewo decyzyjne",
+                            scrollable: true,
+                            dockedItems: [{
+                                items: "toolbar",
+                                layout: "vbox",
+                                items: [{
+                                    xtype: 'combobox',
+                                    fieldLabel: "Wybierz Pytanie",
+                                    store: Ext.create("Ext.data.ChainedStore", {
+                                        source: question_store,
+                                        filters: [function (item) {
+                                            return item.get('type') == "select";
+                                        }]
+                                    }),
+                                    queryMode: "local",
+                                    displayField: "name",
+                                    itemId: "current_question",
+                                    listeners: {
+                                        change: function (a, value) {
+                                            var decisionTree = new dt.DecisionTree({
+                                                trainingSet: respondents,
+                                                categoryAttr: value,
+                                                ignoredAttributes: ['id', 'completed'],
+                                                maxTreeDepth: 5
+                                            });
+
+                                            a.up('window').down('#tree-container').getEl().fadeOut();
+                                            a.up('window').down('#tree-container').setHtml('<div class="tree">' + win.treeToHtml(decisionTree.root) + '</div>');
+                                            a.up('window').down('#tree-container').getEl().fadeIn();
+                                        }
+                                    }
+                                }, {
+                                    xtype: 'button',
+                                    text: "Pobierz",
+                                    width: "100%",
+                                    handler: function () {
+                                        console.log(this.up('window').down('#tree-container'));
+                                        var tree_container = this.up('window').down('#tree-container').el.dom.innerHTML,
+                                            current_question = this.up('window').down('#current_question').getValue() || "Drzewo decyzyjne";
+                                        a = new Blob(["<style>.tree li,.tree ul{position:relative;transition:all .5s}.tree ul{padding-top:20px;-webkit-transition:all .5s;-moz-transition:all .5s}.tree li{white-space:nowrap;float:left;text-align:center;list-style-type:none;padding:20px 5px 0;-webkit-transition:all .5s;-moz-transition:all .5s}.tree li::after,.tree li::before,.tree ul ul::before{content:'';position:absolute;top:0;height:20px}.tree li::after,.tree li::before{right:50%;border-top:1px solid #ccc;width:50%}.tree li::after{right:auto;left:50%;border-left:1px solid #ccc}.tree li:only-child::after,.tree li:only-child::before{display:none}.tree li:only-child{padding-top:0}.tree li:first-child::before,.tree li:last-child::after{border:0}.tree li:last-child::before{border-right:1px solid #ccc;border-radius:0 5px 0 0;-webkit-border-radius:0 5px 0 0;-moz-border-radius:0 5px 0 0}.tree li:first-child::after{border-radius:5px 0 0;-webkit-border-radius:5px 0 0;-moz-border-radius:5px 0 0}.tree ul ul::before{left:50%;border-left:1px solid #ccc;width:0}.tree li a{border:1px solid #ccc;padding:5px 10px;text-decoration:none;color:#666;font-family:arial,verdana,tahoma;font-size:11px;display:inline-block;border-radius:5px;-webkit-border-radius:5px;-moz-border-radius:5px;transition:all .5s;-webkit-transition:all .5s;-moz-transition:all .5s}.tree li a:hover,.tree li a:hover+ul li a{background:#c8e4f8;color:#000;border:1px solid #94a0b4}.tree li a:hover+ul li::after,.tree li a:hover+ul li::before,.tree li a:hover+ul ul::before,.tree li a:hover+ul::before{border-color:#94a0b4}</style>" + tree_container], {type: "text/html; charset=utf-8"})
+                                        saveAs(a, current_question + ".html");
+                                    }
+                                }]
+                            }],
+                            items: [{
+                                xtype: "container",
+                                itemId: "tree-container",
+                                scrollable: true
+                            }]
+                        }]
+                    }).show();
+                }
+            },
+            failure: function (response, opts) {
+                PP.util.Toast.show('Błąd monitoringu', 'Błąd', 't')
+            }
+        });
+
+
+    },
+
     generate_link: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);
         var link = window.location.origin + "/#poll/" + rec.get('form_uuid');
@@ -27,7 +267,8 @@ Ext.define('PP.view.form.FormController', {
                 html: "Wygenerowany link: <br><a target='_BLANK' href='" + link + "'>" + link + "</a>"
             }]
         }).show();
-    },
+    }
+    ,
 
     remove_question_answer: function (grid, rowIndex) {
         var store = grid.getStore(),
@@ -43,7 +284,8 @@ Ext.define('PP.view.form.FormController', {
                 store.rejectChanges();
             }
         });
-    },
+    }
+    ,
 
     add_question_answer: function () {
         var store = this.lookup('question_answer_grid').getStore();
@@ -57,7 +299,8 @@ Ext.define('PP.view.form.FormController', {
                 store.rejectChanges();
             }
         });
-    },
+    }
+    ,
 
     question_answers: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex),
@@ -146,7 +389,8 @@ Ext.define('PP.view.form.FormController', {
             }
             ]
         }).show();
-    },
+    }
+    ,
 
     add_question: function () {
         var question_store = this.lookup('question_add_form').question_grid.getStore(),
@@ -162,7 +406,8 @@ Ext.define('PP.view.form.FormController', {
                 question_store.rejectChanges();
             }
         });
-    },
+    }
+    ,
 
     remove_question: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex),
@@ -171,7 +416,7 @@ Ext.define('PP.view.form.FormController', {
         console.log("dada");
         Ext.MessageBox.show({
             title: "Usunięcie pytania",
-            msg: 'Czy na pewno chcesz usunąć pytanie ?',
+            msg: Ext.String.format('Czy na pewno chcesz usunąć pytanie {0}?', rec.get('name')),
             buttons: Ext.MessageBox.YESNO,
             buttonText: {
                 yes: "Tak",
@@ -195,7 +440,8 @@ Ext.define('PP.view.form.FormController', {
                 }
             }
         }).toFront();
-    },
+    }
+    ,
 
     create_question: function () {
         var question_grid = this.lookup('question_grid');
@@ -236,13 +482,32 @@ Ext.define('PP.view.form.FormController', {
                     fieldLabel: "Opis",
                     name: "description"
                 }, {
-                    xtype: "textfield",
-                    fieldLabel: "Rodzaj",
-                    name: "type"
+                    xtype: 'fieldcontainer',
+                    fieldLabel: 'Rodzaj',
+                    defaultType: 'radiofield',
+                    defaults: {
+                        flex: 1
+                    },
+                    layout: 'hbox',
+                    items: [
+                        {
+                            boxLabel: 'Wybór',
+                            name: 'type',
+                            inputValue: "select",
+                            checked: true
+                        },
+                        {
+                            boxLabel: 'Opis',
+                            name: 'type',
+                            inputValue: "custom"
+                        }
+                    ]
                 }, {
                     xtype: "numberfield",
                     fieldLabel: "Pozycja",
-                    name: "position"
+                    name: "position",
+                    minValue: 1,
+                    value: 1
                 }]
             }
                 // , {
@@ -286,7 +551,8 @@ Ext.define('PP.view.form.FormController', {
                 // }
             ]
         }).show();
-    },
+    }
+    ,
 
     questions: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);
@@ -377,7 +643,8 @@ Ext.define('PP.view.form.FormController', {
             }]
         }).show();
 
-    },
+    }
+    ,
 
     remove_form: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex),
@@ -385,7 +652,7 @@ Ext.define('PP.view.form.FormController', {
             me = this;
         Ext.MessageBox.show({
             title: "Usunięcie formularza",
-            msg: 'Czy na pewno chcesz usunąć formularz ?',
+            msg: Ext.String.format("Czy na pewno chcesz usunąć formularz <u>{0}</u>?", rec.get('name')),
             buttons: Ext.MessageBox.YESNO,
             buttonText: {
                 yes: "Tak",
@@ -407,7 +674,8 @@ Ext.define('PP.view.form.FormController', {
                 }
             }
         });
-    },
+    }
+    ,
 
     edit_form: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);
@@ -462,7 +730,7 @@ Ext.define('PP.view.form.FormController', {
                             {
                                 boxLabel: 'Nie',
                                 name: 'active',
-                                itemId:"not_active",
+                                itemId: "not_active",
                                 inputValue: false
                             }
                         ]
@@ -485,6 +753,28 @@ Ext.define('PP.view.form.FormController', {
                                 boxLabel: 'Losowa',
                                 name: 'order',
                                 inputValue: 'random'
+                            }
+                        ]
+                    },
+                    {
+                        xtype: 'fieldcontainer',
+                        fieldLabel: 'Powiadomienie (na adres email) po wypełnieniu formularza',
+                        defaultType: 'radiofield',
+                        defaults: {
+                            flex: 1
+                        },
+                        layout: 'hbox',
+                        items: [
+                            {
+                                boxLabel: 'Tak',
+                                name: 'completion_notify',
+                                inputValue: true
+                            },
+                            {
+                                boxLabel: 'Nie',
+                                name: 'completion_notify',
+                                inputValue: false,
+                                itemId: "not_completion_notify"
                             }
                         ]
                     },
@@ -578,10 +868,14 @@ Ext.define('PP.view.form.FormController', {
         if (rec.get('password_restriction') === false) {
             win.down('#not_password_restriction').setValue(true);
         }
-        if (rec.get('active') === false){
+        if (rec.get('active') === false) {
             win.down('#not_active').setValue(true);
         }
-    },
+        if (rec.get('completion_notify') === false) {
+            win.down('#not_completion_notify').setValue(true);
+        }
+    }
+    ,
 
     save_form: function () {
         var values = this.lookup('formEdit').getValues(),
@@ -599,7 +893,8 @@ Ext.define('PP.view.form.FormController', {
                 store.rejectChanges();
             }
         });
-    },
+    }
+    ,
 
 
     add_form: function () {
@@ -617,7 +912,8 @@ Ext.define('PP.view.form.FormController', {
                 store.rejectChanges();
             }
         });
-    },
+    }
+    ,
 
     create_poll: function (a, b) {
         Ext.create('Ext.window.Window', {
@@ -677,6 +973,28 @@ Ext.define('PP.view.form.FormController', {
                                 boxLabel: 'Losowa',
                                 name: 'order',
                                 inputValue: 'random'
+                            }
+                        ]
+                    },
+                    {
+                        xtype: 'fieldcontainer',
+                        fieldLabel: 'Powiadomienie (na adres email) po wypełnieniu formularza',
+                        defaultType: 'radiofield',
+                        defaults: {
+                            flex: 1
+                        },
+                        layout: 'hbox',
+                        items: [
+                            {
+                                boxLabel: 'Tak',
+                                name: 'completion_notify',
+                                inputValue: true
+                            },
+                            {
+                                boxLabel: 'Nie',
+                                name: 'completion_notify',
+                                inputValue: false,
+                                checked: true
                             }
                         ]
                     },
@@ -762,4 +1080,5 @@ Ext.define('PP.view.form.FormController', {
 
 
     }
-});
+})
+;

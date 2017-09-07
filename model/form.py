@@ -3,6 +3,7 @@ from sqlalchemy import Enum
 import datetime
 import uuid
 
+
 class Form(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
@@ -19,9 +20,11 @@ class Form(db.Model):
     ip_address = db.Column(db.String(15))
     completed = db.Column(db.BOOLEAN, default=False)
     complete_date = db.Column(db.DateTime)
+    completion_notify = db.Column(db.BOOLEAN, default=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    def __init__(self, name, description, user_id = None, order = "random", password_restriction = False, password = None, cookie_restriction = False, ip_address_restriction = False, ip_address = None):
+    def __init__(self, name, description, user_id=None, order="random", password_restriction=False, password=None,
+                 cookie_restriction=False, ip_address_restriction=False, ip_address=None, completion_notify=False):
         self.name = name
         self.description = description
         self.form_uuid = str(uuid.uuid4())
@@ -35,6 +38,7 @@ class Form(db.Model):
         self.active = False
         self.completed = False
         self.complete_date = None
+        self.completion_notify = completion_notify
 
     def set(self, body):
         for attr, val in body.items():

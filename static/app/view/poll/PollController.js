@@ -56,7 +56,33 @@ Ext.define('PP.view.poll.PollController', {
         });
 
         switch (data.type) {
-            default:
+            case "custom":
+                me.lookup('poll_form').add({
+                    xtype: "component",
+                    html: "<h2><center>" + data.name + "</center></h2>",
+                    anchor: "100%"
+                });
+                me.lookup('poll_form').add({
+                    xtype: "component",
+                    html: "<center>" + data.description + "</center>",
+                    anchor: "100%"
+                });
+                 me.lookup('poll_form').add(
+                    {
+                        xtype: 'fieldset',
+                        defaults: {
+                            flex: 1
+                        },
+                        layout: 'vbox',
+                        items: [{
+                            xtype: "textarea",
+                            width: "100%",
+                            name: "answer"
+                        }]
+                    }
+                );
+                break;
+            case "select":
                 me.lookup('poll_form').add({
                     xtype: "component",
                     html: "<h2><center>" + data.name + "</center></h2>",

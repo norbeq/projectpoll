@@ -95,11 +95,11 @@ def respondent_question(guest_uuid):
 
     if form.order == "position":
         sql = text(
-            'select fq.id, fq.name, fq.description, fq.type from form_question fq WHERE id not in (select form_question_id from respondent_vote rv join respondent r ON r.id=rv.respondent_id WHERE r.guest_uuid=:uuid) ORDER BY fq.position ASC limit 1')
+            'select fq.id, fq.name, fq.description, fq.type from form_question fq WHERE fq.form_id =:form_id AND id not in (select form_question_id from respondent_vote rv join respondent r ON r.id=rv.respondent_id WHERE r.guest_uuid=:uuid) ORDER BY fq.position ASC limit 1')
     else:
         sql = text(
-            'select fq.id, fq.name, fq.description, fq.type from form_question fq WHERE id not in (select form_question_id from respondent_vote rv join respondent r ON r.id=rv.respondent_id WHERE r.guest_uuid=:uuid) ORDER BY rand() ASC limit 1')
-    result = db.engine.execute(sql, {'uuid': guest_uuid}).fetchone()
+            'select fq.id, fq.name, fq.description, fq.type from form_question fq WHERE fq.form_id =:form_id AND id not in (select form_question_id from respondent_vote rv join respondent r ON r.id=rv.respondent_id WHERE r.guest_uuid=:uuid) ORDER BY rand() ASC limit 1')
+    result = db.engine.execute(sql, {'form_id':form.id, 'uuid': guest_uuid}).fetchone()
 
     if result:
         data = {"success": True,
@@ -123,6 +123,10 @@ def respondent_question(guest_uuid):
         now = datetime.datetime.now()
         respondent.end_date = str(now.strftime("%Y-%m-%d %H:%M:%S"))
         db.session.commit()
+
+        if form.user_id in app.sockets:
+            emit('vote-end', {'form_id': respondent.form_id, 'respondent_id': respondent.id}, namespace="/",
+                 room=app.sockets[form.user_id])
 
         if form.completion_notify:
             user = User.query.filter_by(id=form.user_id).first()
@@ -163,19 +167,25 @@ def respondent_question_vote(guest_uuid):
     if not question:
         return BadRequestResponse(obj={"success": False})
 
+    answer = None
+
     if question.type == "custom":
         respondent_vote = RespondentVote(respondent.id, body.get('question_id'), form.id, custom_answer=body.get('answer'))
+        answer = body.get('answer')
     else:
+        question_answer = FormQuestionAnswer.query.filter_by(id=body.get('answer')).first()
+        if question_answer:
+            answer = question_answer.name
+
         respondent_vote = RespondentVote(respondent.id, body.get('question_id'), form.id, custom_answer=None,
                                          form_question_answer_id=body.get('answer'))
-
 
     db.session.add(respondent_vote)
     db.session.commit()
 
     if form.user_id in app.sockets:
-        emit('vote', {'form_question_id': respondent_vote.form_question_id, 'form_id': respondent_vote.form_id, 'respondent_id': respondent_vote.respondent_id,
-                      'form_question_answer_id': respondent_vote.form_question_answer_id, 'custom_answer': respondent_vote.custom_answer}, namespace="/", room=app.sockets[form.user_id])
+        emit('vote', {'form_question_id': respondent_vote.form_question_id, 'form_question_name': question.name, 'form_id': respondent_vote.form_id, 'respondent_id': respondent_vote.respondent_id,
+                      'form_question_answer_id': respondent_vote.form_question_answer_id, 'custom_answer': respondent_vote.custom_answer, 'answer': answer}, namespace="/", room=app.sockets[form.user_id])
 
     data = {"success": True}
     return JsonResponse(data)

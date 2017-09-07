@@ -39,13 +39,6 @@ Ext.define('PP.view.main.Main', {
                 },
                 '->',
                 {
-                    iconCls:'x-fa fa-question',
-                    ui: 'header',
-                    href: '#faq',
-                    hrefTarget: '_self',
-                    tooltip: 'Pomoc / FAQ\'s'
-                },
-                {
                     xtype: 'tbtext',
                     bind: '{username}',
                     cls: 'top-user-name'

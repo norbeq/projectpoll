@@ -246,6 +246,12 @@
         },
         {
             "path": "resources/js/sha512.min.js"
+        },
+        {
+            "path": "resources/js/decision-tree-min.js"
+        },
+        {
+            "path": "resources/js/FileSaver.min.js"
         }
     ],
 
