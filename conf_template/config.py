@@ -1,11 +1,11 @@
 token = {
     'key':"<SECRET KEY>",
     'expiration_seconds':'3600',
-    'iss':'ankiety.mianor.pl'
+    'iss':'iss'
 }
 db_conf = "mysql://username:password@hostname/dbname"
 mail_conf = {
-    'server':"smtp.gmail.com",
+    'server':"smtp-server",
     'port':465,
     'use_ssl':True,
     'username':'mail',
