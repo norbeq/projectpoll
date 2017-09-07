@@ -3,6 +3,7 @@ from model.form import Form
 from model.form_question import FormQuestion
 from model.form_question_answer import FormQuestionAnswer
 from model.respondent_vote import RespondentVote
+from model.respondent import Respondent
 from model.model import db
 from util.http_response import JsonResponse, AuthenticationFailureResponse, BadRequestResponse
 from sqlalchemy import text, func
@@ -325,7 +326,7 @@ def form_votes(form_id):
         # RespondentVote.query.join(FormQuestionAnswer, RespondentVote.form_question_answer_id==FormQuestionAnswer.id).\
         # add_columns(FormQuestionAnswer.name).join(FormQuestion, RespondentVote.form_question_id==FormQuestion.id).add_columns(FormQuestion.name).filter(RespondentVote.form_id == form_id)
 
-    respondent_votes = RespondentVote.query.join(FormQuestionAnswer, RespondentVote.form_question_answer_id==FormQuestionAnswer.id).add_columns(FormQuestionAnswer.name).join(FormQuestion, RespondentVote.form_question_id==FormQuestion.id).add_columns(FormQuestion.name).filter(RespondentVote.form_id == form_id).all()
+    respondent_votes = RespondentVote.query.join(FormQuestionAnswer, RespondentVote.form_question_answer_id==FormQuestionAnswer.id).add_columns(FormQuestionAnswer.name).join(FormQuestion, RespondentVote.form_question_id==FormQuestion.id).add_columns(FormQuestion.name).join(Respondent, RespondentVote.respondent_id==Respondent.id).add_columns(Respondent.completed).filter(RespondentVote.form_id == form_id).all()
     respondents = {}
     # print(respondent_votes)
     for p in respondent_votes:
@@ -337,6 +338,8 @@ def form_votes(form_id):
         if not 'answers' in respondents[q.respondent_id]:
             respondents[q.respondent_id]['answers'] = {}
 
+        respondents[q.respondent_id]['completed'] = p[3]
+
         if q.form_question_id in questions:
 
             qes = questions[q.form_question_id]
@@ -344,12 +347,6 @@ def form_votes(form_id):
                 respondents[q.respondent_id]['answers'][p[2]] = q.custom_answer
             else:
                 respondents[q.respondent_id]['answers'][p[2]] = p[1]
-
-    for res in respondents:
-        if len(respondents[res]['answers']) == len(questions):
-            respondents[res]['completed'] = True
-        else:
-            respondents[res]['completed'] = False
 
     data = {"success": True, "questions": questions, "respondents": respondents, "question_answers_grouped": question_answers_grouped}
     return JsonResponse(data)

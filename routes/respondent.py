@@ -122,6 +122,7 @@ def respondent_question(guest_uuid):
     else:
         now = datetime.datetime.now()
         respondent.end_date = str(now.strftime("%Y-%m-%d %H:%M:%S"))
+        respondent.completed = True
         db.session.commit()
 
         if form.user_id in app.sockets:

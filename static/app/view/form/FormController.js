@@ -108,6 +108,7 @@ Ext.define('PP.view.form.FormController', {
                     // var answers = {};
 
                     var respondents = [];
+                    var completed_respondents = [];
                     Ext.iterate(obj.respondents, function (respondent_id, respondent) {
                         var a = {};
                         a.id = respondent_id;
@@ -117,6 +118,10 @@ Ext.define('PP.view.form.FormController', {
                             a[key] = val;
                         });
                         respondents.push(a);
+
+                        if(a.completed){
+                            completed_respondents.push(a);
+                        }
                     });
 
                     var fields = [{name: 'id', type: 'int'}, {name: 'completed', type: 'boolean'}];
@@ -161,6 +166,7 @@ Ext.define('PP.view.form.FormController', {
                                 '</ul>'].join('');
                         },
                         respondents: respondents,
+                        completed_respondents: completed_respondents,
                         height: 600,
                         modal: true,
                         defaults: {
@@ -200,16 +206,18 @@ Ext.define('PP.view.form.FormController', {
                                     itemId: "current_question",
                                     listeners: {
                                         change: function (a, value) {
-                                            var decisionTree = new dt.DecisionTree({
-                                                trainingSet: respondents,
-                                                categoryAttr: value,
-                                                ignoredAttributes: ['id', 'completed'],
-                                                maxTreeDepth: 5
-                                            });
+                                            if(win.completed_respondents.length > 0) {
+                                                var decisionTree = new dt.DecisionTree({
+                                                    trainingSet: win.completed_respondents,
+                                                    categoryAttr: value,
+                                                    ignoredAttributes: ['id', 'completed'],
+                                                    maxTreeDepth: 5
+                                                });
 
-                                            a.up('window').down('#tree-container').getEl().fadeOut();
-                                            a.up('window').down('#tree-container').setHtml('<div class="tree">' + win.treeToHtml(decisionTree.root) + '</div>');
-                                            a.up('window').down('#tree-container').getEl().fadeIn();
+                                                a.up('window').down('#tree-container').getEl().fadeOut();
+                                                a.up('window').down('#tree-container').setHtml('<div class="tree">' + win.treeToHtml(decisionTree.root) + '</div>');
+                                                a.up('window').down('#tree-container').getEl().fadeIn();
+                                            }
                                         }
                                     }
                                 }, {

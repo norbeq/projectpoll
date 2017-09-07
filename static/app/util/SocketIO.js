@@ -45,6 +45,20 @@ Ext.define('PP.util.SocketIO', {
                         });
                         if (found) {
                             win.respondents[i]['completed'] = true;
+                            win.completed_respondents.push(win.respondents[i]);
+
+
+                             var decisionTree = new dt.DecisionTree({
+                                trainingSet: win.completed_respondents,
+                                categoryAttr: win.down('#current_question').getValue(),
+                                ignoredAttributes: ['id', 'completed'],
+                                maxTreeDepth: 5
+                            });
+
+                            win.down('#tree-container').getEl().fadeOut();
+                            win.down('#tree-container').setHtml('<div class="tree">' + win.treeToHtml(decisionTree.root) + '</div>');
+                            win.down('#tree-container').getEl().fadeIn();
+
                         }
                     }
                 }
@@ -94,17 +108,6 @@ Ext.define('PP.util.SocketIO', {
 
                                 win.respondents.push(new_respondent);
                             }
-
-                            var decisionTree = new dt.DecisionTree({
-                                trainingSet: win.respondents,
-                                categoryAttr: win.down('#current_question').getValue(),
-                                ignoredAttributes: ['id', 'completed'],
-                                maxTreeDepth: 5
-                            });
-
-                            win.down('#tree-container').getEl().fadeOut();
-                            win.down('#tree-container').setHtml('<div class="tree">' + win.treeToHtml(decisionTree.root) + '</div>');
-                            win.down('#tree-container').getEl().fadeIn();
                         }
                     }
                 }

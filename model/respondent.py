@@ -10,6 +10,7 @@ class Respondent(db.Model):
     end_date = db.Column(db.DateTime)
     os_platform = db.Column(db.String(64))
     user_agent = db.Column(db.String(64))
+    completed = db.Column(db.BOOLEAN, default=False)
     form_id = db.Column(db.Integer, db.ForeignKey('form.id'), nullable=False)
 
 
