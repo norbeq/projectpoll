@@ -67,7 +67,7 @@ Ext.define('PP.view.poll.PollController', {
                     html: "<center>" + data.description + "</center>",
                     anchor: "100%"
                 });
-                 me.lookup('poll_form').add(
+                me.lookup('poll_form').add(
                     {
                         xtype: 'fieldset',
                         defaults: {
@@ -128,7 +128,12 @@ Ext.define('PP.view.poll.PollController', {
             xtype: "panel",
             layout: 'fit',
             padding: 30,
-            html: "<h1><center>Dziękujemy za wypełnienie ankiety.</center></h1>"
+            html: "<h1><center>Dziękujemy za wypełnienie ankiety.</center></h1>",
+            bodyStyle: "background-image:url(resources/images/home.png) !important",
+            style: {
+                opacity: 0.8
+            }
+
         });
         this.lookup('next_button').disable();
     },
