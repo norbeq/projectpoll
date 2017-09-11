@@ -1,5 +1,9 @@
 # projectpoll
 
+## example screenshots
+![charts](https://raw.githubusercontent.com/norbeq/projectpoll/master/docs/screenshots/exampleChart.jpg)
+![decision tree](https://raw.githubusercontent.com/norbeq/projectpoll/master/docs/screenshots/exampleDecisionTree.jpg)
+
 ## database model
 ![Database model](https://raw.githubusercontent.com/norbeq/projectpoll/master/docs/database_scheme.png)
 
