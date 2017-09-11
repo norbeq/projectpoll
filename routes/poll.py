@@ -37,12 +37,3 @@ def poll_info():
     data = {"success": True, "data": {"forms": forms, "forms_completed": forms_completed, "questions": questions,
                                       "respondents": respondents, "users": users}}
     return JsonResponse(data)
-
-@poll_api.route('/poll/<int:id>/', methods=['GET'])
-@poll_api.route('/poll/<int:id>', methods=['GET'])
-def poll_i(id):
-    if authentication(request) == False:
-        return AuthenticationFailureResponse()
-
-    data = {"success": True, "message": "sa dane", "id": id}
-    return JsonResponse(data)
