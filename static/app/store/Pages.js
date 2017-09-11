@@ -39,6 +39,10 @@ Ext.define('PP.store.Pages', {
             {
                 text: "Password Reset",
                 viewType: 'passwordreset'
+            },
+            {
+                text: "No form",
+                viewType: 'noform'
             }
         ]
     }

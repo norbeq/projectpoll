@@ -58,6 +58,7 @@ Ext.define('PP.Application', {
         "authentication.PasswordReset",
         //Faq
         "pages.FAQ",
+        "pages.NoFormWindow",
         //Forms
         "form.Forms",
         "form.FormController",
@@ -122,11 +123,13 @@ Ext.define('PP.Application', {
                             }).mask();
                         }
                     } else {
-                        window.location.href = window.location.origin + "/#home";
+                        location.reload();
+                        window.location.href = window.location.origin + "/#noform";
                     }
                 },
                 failure: function (response, opts) {
-                    window.location.href = window.location.origin + "/#home";
+                    location.reload();
+                    window.location.href = window.location.origin + "/#noform";
                 }
             });
         }

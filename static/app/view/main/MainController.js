@@ -19,7 +19,7 @@ Ext.define('PP.view.main.MainController', {
     setCurrentView: function (hashTag) {
         hashTag = (hashTag || '').toLowerCase();
 
-        if (["home", 'login', 'register', 'activation', 'passwordreset', ''].indexOf(hashTag) > -1 || PP.util.Security.checkCookieToken()) {
+        if (["home", 'login', 'register', 'activation', 'passwordreset', 'noform', ''].indexOf(hashTag) > -1 || PP.util.Security.checkCookieToken()) {
 
             var me = this,
                 refs = me.getReferences(),
@@ -199,6 +199,8 @@ Ext.define('PP.view.main.MainController', {
                     this.redirectTo("register");
                 } else if (window.location.hash === "#passwordreset") {
                     this.redirectTo("passwordreset");
+                } else if (window.location.hash === "#noform") {
+                    this.redirectTo("noform");
                 } else {
                     this.redirectTo("home");
                 }
