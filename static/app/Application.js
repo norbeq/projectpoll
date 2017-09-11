@@ -7,7 +7,8 @@ Ext.define('PP.Application', {
         'NavigationTree',
         'Pages',
         'Forms',
-        'RespondentInfo'
+        'RespondentInfo',
+        'GlobalInfo'
     ],
 
     models: [
@@ -45,9 +46,9 @@ Ext.define('PP.Application', {
         //Home
         "home.Home",
         "home.HomeController",
-        "home.Services",
-        "home.HomeModel",
+        "home.Informations",
         "home.HomeLogged",
+        "home.Settings",
         //Authentication
         "authentication.Login",
         "authentication.Dialog",

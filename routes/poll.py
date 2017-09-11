@@ -2,6 +2,7 @@ from flask import Blueprint, session, request
 from model.form import Form
 from model.form_question import FormQuestion
 from model.respondent import Respondent
+from model.user import User
 from util.http_response import JsonResponse, AuthenticationFailureResponse
 from sqlalchemy import func
 from model.model import db
@@ -29,8 +30,12 @@ def poll_info():
         db.session.query(Respondent).statement.with_only_columns([func.count()]).order_by(None)
     ).scalar()
 
+    users = db.session.execute(
+        db.session.query(User).statement.with_only_columns([func.count()]).order_by(None)
+    ).scalar()
+
     data = {"success": True, "data": {"forms": forms, "forms_completed": forms_completed, "questions": questions,
-                                      "respondents": respondents}}
+                                      "respondents": respondents, "users": users}}
     return JsonResponse(data)
 
 @poll_api.route('/poll/<int:id>/', methods=['GET'])

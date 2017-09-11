@@ -60,12 +60,12 @@ Ext.define('PP.view.form.FormController', {
                             content += "<tr><td>" + q.form_question_name + "</td><td>" + q.custom_answer + "</td></tr>";
                         }
                     });
-                    content+="</table>";
+                    content += "</table>";
                     content += "<font color='#4985ff'><b>Odpowiedzi respondentów</b></font>";
                     Ext.iterate(obj.respondents, function (_, respondent) {
                         content += "<table style='border: 1px solid black;'><tr style='background-color:#8aff92'><td>Data rozpoczęcia</td><td>" + respondent.start_date + "</td><td>Data zakończenia</td><td>" + respondent.end_date + "</td></tr>";
                         Ext.iterate(respondent.answers, function (quest, ans) {
-                            content += "<tr><td>"+quest + "</td><td>" + ans + "</td></tr>";
+                            content += "<tr><td>" + quest + "</td><td>" + ans + "</td></tr>";
                         });
                         content += "</table>";
                     });
@@ -151,7 +151,26 @@ Ext.define('PP.view.form.FormController', {
                                     label: {
                                         field: 'answer',
                                         display: 'outside',
-                                        fontSize: 16
+                                        fontSize: 16,
+
+
+                                        renderer: function (val, a, b, c) {
+                                            var record = c.store.findRecord("answer", val);
+                                            if (record) {
+                                                var all = 0;
+                                                c.store.each(function (r) {
+                                                    if (r.get("form_question_name") == record.get("form_question_name")) {
+                                                        all += r.get('count');
+                                                    }
+                                                });
+
+                                                return val + "(" + (parseFloat(record.get("count") / all) * 100.0).toFixed(2) + ")%";
+                                            } else {
+                                                return val;
+                                            }
+                                        }
+
+
                                     },
                                     style: {
                                         strokeStyle: 'white',

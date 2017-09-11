@@ -8,11 +8,13 @@ Ext.define('PP.view.home.HomeLogged', {
     },
 
     layout: 'responsivecolumn',
-    
+
     listeners: {
         hide: 'onHideView'
     },
 
-    items: [
-    ]
+    items: [{
+        xtype: 'logged-informations',
+        userCls: 'big-100 small-50'
+    }]
 });

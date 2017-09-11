@@ -12,9 +12,7 @@ Ext.define('PP.view.home.Home', {
     header: false,
 
     controller: 'home',
-    viewModel: {
-        type: 'home'
-    },
+    viewModel: true,
 
     layout: 'border',
 
@@ -36,7 +34,7 @@ Ext.define('PP.view.home.Home', {
                 listeners: {
                     click: 'onLogin'
                 }
-            }, "LUB" , {
+            }, "LUB", {
                 xtype: "button",
                 text: "Zarejestruj się",
                 listeners: {
@@ -47,21 +45,12 @@ Ext.define('PP.view.home.Home', {
         border: false,
         margin: '0 0 5 0'
     }, {
-        region: 'south',
-        title: 'South Panel',
-        collapsible: true,
-        header: false,
-        items: [{}],
-
-        height: 100,
-        minHeight: 100
-    }, {
         region: 'center',
         xtype: 'panel', // TabPanel itself has no title
         header: false,
-        items: {
-            xtype: 'services',
-            userCls: 'big-100 small-100'
-        }
+        items: [{
+            xtype: 'informations',
+            userCls: 'big-100 small-50'
+        }]
     }]
 });
