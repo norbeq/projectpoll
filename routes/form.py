@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, current_app as app
 from model.form import Form
 from model.form_question import FormQuestion
 from model.form_question_answer import FormQuestionAnswer
@@ -7,6 +7,8 @@ from model.respondent import Respondent
 from model.model import db
 from util.http_response import JsonResponse, AuthenticationFailureResponse, BadRequestResponse
 from sqlalchemy import text, func
+import uuid
+import re
 
 form_api = Blueprint('form_api', __name__)
 from util.auth import authentication
@@ -142,6 +144,7 @@ def form_questions(form_id):
         f['id'] = q.id
         f['name'] = q.name
         f['description'] = q.description
+        f['image'] = q.image
         f['type'] = q.type
         f['position'] = q.position
         f['form_id'] = form_id
@@ -176,12 +179,20 @@ def question_create(form_id):
     if token == False:
         return AuthenticationFailureResponse()
 
-    try:
-        body = request.get_json()
-    except:
-        return BadRequestResponse({"success": False, "message": "Wrong json"})
-
+    body = {}
     body['form_id'] = form_id
+    body['name'] = request.form['name']
+    body['position'] = request.form['position']
+    body['description'] = request.form['description']
+    body['type'] = request.form['type']
+    image = request.files['image']
+    if(image):
+        m = re.search('(.*)(\.jpg|\.bmp|\.png|\.jpeg)', image.filename)
+        if(m):
+            if m.group(1) and m.group(2):
+                new_filename = m.group(1) + str(uuid.uuid4())[0:6] + m.group(2)
+                image.save(app.config['UPLOAD_FOLDER'] + '/' + new_filename)
+                body['image'] = new_filename
 
     question = FormQuestion()
     question.set(body)
@@ -191,9 +202,7 @@ def question_create(form_id):
     form_val = {"id": question.id, "name": question.name, "description": question.description, "type": question.type,
                 "position": question.position, "form_id": form_id}
     data = {"success": True, "data": form_val}
-
     return JsonResponse(data)
-
 
 @form_api.route('/form/<int:form_id>/question/<int:question_id>/answer', methods=['GET'])
 def question_answer_read(form_id, question_id):

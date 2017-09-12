@@ -10,7 +10,7 @@ from routes.password_reset import password_reset_api
 from routes.static import static_api
 from model.model import db
 from jose import jwt
-from config import token, db_conf, mail_conf, http_url
+from config import token, db_conf, mail_conf, http_url, upload
 
 import eventlet
 
@@ -30,7 +30,9 @@ app.config.update(
     MAIL_PORT=mail_conf['port'],
     MAIL_USE_SSL=mail_conf['use_ssl'],
     MAIL_USERNAME=mail_conf['username'],
-    MAIL_PASSWORD=mail_conf['password']
+    MAIL_PASSWORD=mail_conf['password'],
+    UPLOAD_FOLDER=upload['folder'],
+    ALLOWED_EXTENSIONS=upload['allowed_extensions']
 )
 
 socketio = SocketIO(app)

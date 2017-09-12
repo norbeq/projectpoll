@@ -57,6 +57,7 @@ Ext.define('PP.view.poll.PollController', {
 
         switch (data.type) {
             case "custom":
+
                 me.lookup('poll_form').add({
                     xtype: "component",
                     html: "<h2><center>" + data.name + "</center></h2>",
@@ -67,6 +68,12 @@ Ext.define('PP.view.poll.PollController', {
                     html: "<center>" + data.description + "</center>",
                     anchor: "100%"
                 });
+                if (data.image !== null) {
+                    me.lookup('poll_form').add({
+                        xtype: "component",
+                        html: '<img src="upload/' + data.image + '"'+'width="'+window.innerHeight/1.3+'"/>'
+                    });
+                }
                 me.lookup('poll_form').add(
                     {
                         xtype: 'fieldset',
@@ -93,6 +100,12 @@ Ext.define('PP.view.poll.PollController', {
                     html: "<center>" + data.description + "</center>",
                     anchor: "100%"
                 });
+                if (data.image !== null) {
+                    me.lookup('poll_form').add({
+                        xtype: "component",
+                        html: '<img src="upload/' + data.image + '"'+'width="'+window.innerHeight/1.3+'"/>'
+                    });
+                }
 
                 var answers = [];
 

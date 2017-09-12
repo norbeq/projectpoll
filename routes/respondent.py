@@ -95,15 +95,15 @@ def respondent_question(guest_uuid):
 
     if form.order == "position":
         sql = text(
-            'select fq.id, fq.name, fq.description, fq.type from form_question fq WHERE fq.form_id =:form_id AND id not in (select form_question_id from respondent_vote rv join respondent r ON r.id=rv.respondent_id WHERE r.guest_uuid=:uuid) ORDER BY fq.position ASC limit 1')
+            'select fq.id, fq.name, fq.description, fq.type, fq.image from form_question fq WHERE fq.form_id =:form_id AND id not in (select form_question_id from respondent_vote rv join respondent r ON r.id=rv.respondent_id WHERE r.guest_uuid=:uuid) ORDER BY fq.position ASC limit 1')
     else:
         sql = text(
-            'select fq.id, fq.name, fq.description, fq.type from form_question fq WHERE fq.form_id =:form_id AND id not in (select form_question_id from respondent_vote rv join respondent r ON r.id=rv.respondent_id WHERE r.guest_uuid=:uuid) ORDER BY rand() ASC limit 1')
+            'select fq.id, fq.name, fq.description, fq.type, fq.image from form_question fq WHERE fq.form_id =:form_id AND id not in (select form_question_id from respondent_vote rv join respondent r ON r.id=rv.respondent_id WHERE r.guest_uuid=:uuid) ORDER BY rand() ASC limit 1')
     result = db.engine.execute(sql, {'form_id':form.id, 'uuid': guest_uuid}).fetchone()
 
     if result:
         data = {"success": True,
-                "data": {"id": result[0], "name": result[1], "description": result[2], "type": result[3]}}
+                "data": {"id": result[0], "name": result[1], "description": result[2], "type": result[3], "image": result[4]}}
 
         sql_answers = text(
             'select fqa.id, fqa.name from form_question_answer fqa WHERE fqa.form_question_id=:id')

@@ -401,9 +401,7 @@ Ext.define('PP.view.form.FormController', {
                 store.rejectChanges();
             }
         });
-    }
-    ,
-
+    },
     question_answers: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex),
             me = this;
@@ -495,22 +493,34 @@ Ext.define('PP.view.form.FormController', {
     ,
 
     add_question: function () {
+
+
         var question_store = this.lookup('question_add_form').question_grid.getStore(),
             me = this;
-        question_store.add(this.lookup('question_add_form').getValues());
-        question_store.sync({
-            success: function (batch, options) {
+        this.lookup('question_add_form').submit({
+            url: question_store.proxy.url,
+            waitMsg: 'Dodawanie',
+            success: function (fp, o) {
                 PP.util.Toast.show('Pytanie zostało utworzone pomyślnie', 'Sukces', 't');
+                question_store.reload();
                 me.getView().close();
             },
-            failure: function (batch, options) {
+            failure: function () {
                 PP.util.Toast.show('Utworzenie pytania nie powiodło się', 'Błąd', 't');
-                question_store.rejectChanges();
             }
         });
-    }
-    ,
-
+        // question_store.add(this.lookup('question_add_form').getValues());
+        // question_store.sync({
+        //     success: function (batch, options) {
+        //         PP.util.Toast.show('Pytanie zostało utworzone pomyślnie', 'Sukces', 't');
+        //         me.getView().close();
+        //     },
+        //     failure: function (batch, options) {
+        //         PP.util.Toast.show('Utworzenie pytania nie powiodło się', 'Błąd', 't');
+        //         question_store.rejectChanges();
+        //     }
+        // });
+    },
     remove_question: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex),
             store = grid.getStore(),
@@ -584,6 +594,15 @@ Ext.define('PP.view.form.FormController', {
                     fieldLabel: "Opis",
                     name: "description"
                 }, {
+                    xtype: 'filefield',
+                    emptyText: 'Wybierz zdjęcie',
+                    fieldLabel: 'Zdjęcie',
+                    name: 'image',
+                    buttonText: '',
+                    buttonConfig: {
+                        iconCls: 'upload-icon'
+                    }
+                }, {
                     xtype: 'fieldcontainer',
                     fieldLabel: 'Rodzaj',
                     defaultType: 'radiofield',
@@ -611,47 +630,7 @@ Ext.define('PP.view.form.FormController', {
                     minValue: 1,
                     value: 1
                 }]
-            }
-                // , {
-                //     xtype: "fieldcontainer",
-                //     width: "100%",
-                //     items: [{
-                //
-                //         reference: "question_answer_grid",
-                //         scrollable: true,
-                //         width: "100%",
-                //         xtype: "grid",
-                //         store: Ext.create("Ext.data.Store", {
-                //             fields: [
-                //                 {name: 'name', type: 'string'},
-                //
-                //             ],
-                //         }),
-                //         buttons: [{
-                //             text: "Dodaj odpowiedź"
-                //         }],
-                //         columns: [{
-                //             text: 'Nazwa',
-                //             flex: 1,
-                //             dataIndex: 'name'
-                //         }, {
-                //             xtype: 'actioncolumn',
-                //             width: 80,
-                //             items: [{
-                //                 getClass: function () {
-                //                     return 'x-fa fa-trash';
-                //                 },
-                //                 tooltip: 'Usuń',
-                //                 handler: function (grid, rowIndex) {
-                //                     var rec = grid.getStore().getAt(rowIndex);
-                //                     grid.getStore().remove(rec);
-                //                 }
-                //             }]
-                //         }]
-                //     }]
-                //
-                // }
-            ]
+            }]
         }).show();
     }
     ,
@@ -666,6 +645,7 @@ Ext.define('PP.view.form.FormController', {
                 {name: 'id', type: 'int'},
                 {name: 'name', type: 'string', allowNull: false},
                 {name: 'description', type: 'string', allowNull: true},
+                {name: 'image', type: 'string', allowNull: true},
                 {name: 'type', type: 'string', allowNull: false},
                 {name: 'position', type: 'int'},
                 {name: 'form_id', type: 'int', persist: true}
@@ -710,6 +690,10 @@ Ext.define('PP.view.form.FormController', {
                 scrollable: true,
                 xtype: "grid",
                 store: store,
+                plugins: [{
+                    ptype: 'rowexpander',
+                    rowBodyTpl: new Ext.XTemplate('<img width="120" height="120" src="upload/{image}"/>')
+                }],
                 columns: [{
                     text: 'Nazwa',
                     flex: 1,
