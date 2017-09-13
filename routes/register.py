@@ -5,6 +5,7 @@ from util.http_response import JsonResponse, BadRequestResponse
 from validate_email import validate_email
 from flask_mail import Mail, Message
 import uuid
+import random
 
 register_api = Blueprint('register_api', __name__)
 
@@ -34,7 +35,7 @@ def login():
     firstname = body.get('firstname')
     lastname = body.get('lastname')
     username = body.get('username')
-    activation_key = str(uuid.uuid4())
+    activation_key = "".join(random.choice('0123456789ABCDEFGHIJKLMNOPRSTUVWXYZabcdefghijklmnoprstuvwxyz') for i in range(64))
 
     user = User(email, password, username, firstname, lastname,
                 activation_key)

@@ -8,6 +8,7 @@ from jose import jwt
 import datetime
 from util.http_response import ForbiddenResponse, JsonResponse, BadRequestResponse, AuthenticationFailureResponse, InternalServerErrorResponse
 from util.auth import authentication
+import random
 
 login_api = Blueprint('login_api', __name__)
 
@@ -63,7 +64,7 @@ def pre_login():
     except:
         return BadRequestResponse({"success": False, "message": "Wrong json"})
 
-    salt = uuid.uuid4()
+    salt = "".join(random.choice('0123456789ABCDEFGHIJKLMNOPRSTUVWXYZabcdefghijklmnoprstuvwxyz') for i in range(64))
     email = body.get('email')
     user = User.query.filter_by(email=email).first()
 
