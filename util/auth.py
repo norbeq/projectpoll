@@ -13,6 +13,8 @@ def authentication(request):
     try:
         if auth:
             decoded = jwt.decode(auth, app.config['token']['key'], algorithms='HS256')
+        else:
+            success = False
     except:
         success = False
 
