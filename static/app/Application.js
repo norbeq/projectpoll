@@ -49,6 +49,7 @@ Ext.define('PP.Application', {
         "home.Informations",
         "home.HomeLogged",
         "home.Settings",
+        "home.SettingsController",
         //Authentication
         "authentication.Login",
         "authentication.Dialog",

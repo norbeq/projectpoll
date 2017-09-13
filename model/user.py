@@ -1,4 +1,5 @@
 from .model import db
+import hashlib
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -19,3 +20,14 @@ class User(db.Model):
         self.lastname = lastname
         self.email_activation_key = email_activation_key
         self.active = active
+
+    def __setattr__(self, name, value):
+        if name == "password":
+            super(User, self).__setattr__(name, hashlib.sha512((str(value)).encode('utf-8')).hexdigest())
+        else:
+            super(User, self).__setattr__(name, value)
+
+
+    def set(self, body):
+        for attr, val in body.items():
+            self.__setattr__(attr, val)

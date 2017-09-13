@@ -1,6 +1,10 @@
 Ext.define('PP.view.home.Settings', {
     extend: 'Ext.panel.Panel',
     xtype: 'settings',
+    listeners: {
+        afterrender: "onRender"
+    },
+    controller: "settings",
     items: [
         {
             xtype: "form",
@@ -10,6 +14,10 @@ Ext.define('PP.view.home.Settings', {
                 padding: 10
             },
             items: [{
+                xtype: "textfield",
+                fieldLabel: "Nazwa użytkownika",
+                name: "username"
+            }, {
                 xtype: "textfield",
                 fieldLabel: "Imię",
                 name: "firstname"
@@ -29,16 +37,21 @@ Ext.define('PP.view.home.Settings', {
                     {
                         boxLabel: 'Tak',
                         name: 'password_change',
-                        inputValue: false
+                        inputValue: true,
+                        listeners: {
+                            change: "onPasswordChange"
+                        }
                     },
                     {
                         boxLabel: 'Nie',
                         name: 'password_change',
-                        inputValue: true,
-                        checked: true
+                        inputValue: false,
+                        checked: true,
+                        reference: "password_change"
                     }
                 ]
             }, {
+                reference: "new_password",
                 xtype: "textfield",
                 fieldLabel: "Nowe hasło",
                 name: "password",
@@ -48,7 +61,8 @@ Ext.define('PP.view.home.Settings', {
 
     ],
     buttons: [{
-        text: "Zatwierdź zmiany"
+        text: "Zatwierdź zmiany",
+        handler: "save"
     }]
 })
 ;

@@ -8,6 +8,7 @@ from routes.respondent import respondent_api
 from routes.activation import activation_api
 from routes.password_reset import password_reset_api
 from routes.static import static_api
+from routes.user import user_api
 from model.model import db
 from jose import jwt
 from config import token, db_conf, mail_conf, http_url, upload
@@ -61,6 +62,7 @@ app.register_blueprint(poll_api, url_prefix='/api')
 app.register_blueprint(respondent_api, url_prefix='/api')
 app.register_blueprint(activation_api, url_prefix='/api')
 app.register_blueprint(password_reset_api, url_prefix='/api')
+app.register_blueprint(user_api, url_prefix='/api')
 app.register_blueprint(static_api, url_prefix='')
 db.init_app(app)
 

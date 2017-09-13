@@ -3,7 +3,6 @@ from model.user import User
 from model.model import db
 from util.http_response import JsonResponse, BadRequestResponse
 from validate_email import validate_email
-import hashlib
 from flask_mail import Mail, Message
 import uuid
 
@@ -37,7 +36,7 @@ def login():
     username = body.get('username')
     activation_key = str(uuid.uuid4())
 
-    user = User(email, hashlib.sha512((str(password)).encode('utf-8')).hexdigest(), username, firstname, lastname,
+    user = User(email, password, username, firstname, lastname,
                 activation_key)
     db.session.add(user)
     db.session.commit()
