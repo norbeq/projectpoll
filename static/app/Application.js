@@ -7,6 +7,7 @@ Ext.define('PP.Application', {
         'NavigationTree',
         'Pages',
         'Forms',
+        'FormsDeleted',
         'RespondentInfo',
         'GlobalInfo'
     ],
@@ -63,6 +64,8 @@ Ext.define('PP.Application', {
         //Forms
         "form.Forms",
         "form.FormController",
+        "form.FormsDeleted",
+        "form.FormDeletedController",
         //Poll
         "poll.Poll",
         "poll.PollController"

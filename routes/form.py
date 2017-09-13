@@ -13,6 +13,39 @@ import re
 form_api = Blueprint('form_api', __name__)
 from util.auth import authentication
 
+@form_api.route('/form_deleted', methods=['GET'])
+def form_deleted_info():
+    token = authentication(request)
+    if token == False:
+        return AuthenticationFailureResponse()
+    forms_result = Form.query.filter_by(user_id=token['id'], deleted=True)
+
+    forms = []
+    for form in forms_result:
+        f = {}
+        f['id'] = form.id
+        f['order'] = form.order
+        f['name'] = form.name
+        f['description'] = form.description
+        f['form_uuid'] = form.form_uuid
+        f['created_date'] = str(form.created_date)
+        f['active'] = form.active
+        f['password_restriction'] = form.password_restriction
+        f['password'] = form.password
+        f['deleted'] = form.deleted
+        f['cookie_restriction'] = form.cookie_restriction
+        f['ip_address_restriction'] = form.ip_address_restriction
+        f['ip_address'] = form.ip_address
+        f['completed'] = form.completed
+        if form.complete_date is not None:
+            f['complete_date'] = str(form.complete_date)
+        else:
+            f['complete_date'] = None
+        f['completion_notify'] = form.completion_notify
+        forms.append(f)
+
+    data = {"success": True, "data": forms}
+    return JsonResponse(data)
 
 @form_api.route('/form', methods=['GET'])
 def poll_info():
@@ -273,6 +306,94 @@ def question_answer_create(form_id, question_id):
 
     return JsonResponse(data)
 
+@form_api.route('/form_deleted/<int:form_id>/votes', methods=['GET'])
+def form_deleted_votes(form_id):
+    token = authentication(request)
+    if token == False:
+        return AuthenticationFailureResponse()
+
+    form = Form.query.filter_by(id=form_id, user_id=token['id'], deleted=True).first()
+    if not form:
+        return BadRequestResponse(obj={"success": False})
+
+    query = db.session.query(
+        RespondentVote.custom_answer,
+        RespondentVote.form_question_answer_id,
+        RespondentVote.form_question_id,
+        func.count(RespondentVote.form_question_answer_id).label('count')
+    ).filter_by(form_id=form_id).group_by(RespondentVote.form_question_id).group_by(RespondentVote.form_question_answer_id)
+
+    questions_result = FormQuestion.query.filter_by(form_id=form_id)
+
+    questions = {}
+    for q in questions_result:
+        f = {}
+        f['id'] = q.id
+        f['name'] = q.name
+        f['description'] = q.description
+        f['type'] = q.type
+        f['position'] = q.position
+
+        if q.type == "select":
+            answer_result = FormQuestionAnswer.query.filter_by(form_question_id=q.id)
+
+            f['answers'] = {}
+            for o in answer_result:
+                p = {}
+                p['id'] = o.id
+                p['name'] = o.name
+                f['answers'][o.id] = p
+
+
+        questions[q.id] = f
+
+    question_answers_grouped = []
+    for row in query:
+        res = {}
+        res['custom_answer'] = row.custom_answer
+        res['form_question_answer_id'] = row.form_question_answer_id
+        res['form_question_id'] = row.form_question_id
+
+        if row.form_question_id in questions:
+            res['form_question_name'] = questions[row.form_question_id]['name']
+            if questions[row.form_question_id]['type'] == "select" and row.form_question_answer_id in questions[row.form_question_id]['answers']:
+                res['answer'] = questions[row.form_question_id]['answers'][row.form_question_answer_id]['name']
+
+
+        res['count'] = row.count
+        question_answers_grouped.append(res)
+
+    respondent_votes = RespondentVote.query.join(FormQuestionAnswer, RespondentVote.form_question_answer_id==FormQuestionAnswer.id).add_columns(FormQuestionAnswer.name).join(FormQuestion, RespondentVote.form_question_id==FormQuestion.id).add_columns(FormQuestion.name).join(Respondent, RespondentVote.respondent_id==Respondent.id).add_columns(Respondent.completed, Respondent.start_date, Respondent.end_date).filter(RespondentVote.form_id == form_id).all()
+    respondents = {}
+    # print(respondent_votes)
+    for p in respondent_votes:
+        q = p[0]
+        print(p)
+
+        if not q.respondent_id in respondents:
+            respondents[q.respondent_id] = {}
+
+        respondents[q.respondent_id]['start_date'] = str(p[4])
+        if p[5] is not None:
+            respondents[q.respondent_id]['end_date'] = str(p[5])
+        else:
+            respondents[q.respondent_id]['end_date'] = ""
+
+        if not 'answers' in respondents[q.respondent_id]:
+            respondents[q.respondent_id]['answers'] = {}
+
+        respondents[q.respondent_id]['completed'] = p[3]
+
+        if q.form_question_id in questions:
+
+            qes = questions[q.form_question_id]
+            if qes['type'] == "custom":
+                respondents[q.respondent_id]['answers'][p[2]] = q.custom_answer
+            else:
+                respondents[q.respondent_id]['answers'][p[2]] = p[1]
+
+    data = {"success": True, "questions": questions, "respondents": respondents, "question_answers_grouped": question_answers_grouped}
+    return JsonResponse(data)
 
 @form_api.route('/form/<int:form_id>/votes', methods=['GET'])
 def form_votes(form_id):

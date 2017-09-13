@@ -31,6 +31,14 @@ Ext.define('PP.store.NavigationTree', {
                 leaf: true
             },
             {
+                text: 'Ankiety usunięte',
+                iconCls: 'x-fa fa-area-chart',
+                rowCls: 'nav-tree-badge nav-tree-badge-new',
+                viewType: 'forms_deleted',
+                routeId: 'forms_deleted',
+                leaf: true
+            },
+            {
                 text: 'Ustawienia',
                 iconCls: 'x-fa fa-cog',
                 rowCls: 'nav-tree-badge nav-tree-badge-new',
