@@ -160,7 +160,7 @@ Ext.define('PP.view.form.Forms', {
                             getClass: function () {
                                 return 'x-fa fa-link';
                             },
-                            tooltip: 'Wygeneruj link',
+                            tooltip: 'Pokaż link',
                             handler: "generate_link"
                         }, {
                             getClass: function () {

@@ -354,7 +354,7 @@ Ext.define('PP.view.form.FormController', {
             defaults: {
                 padding: 10
             },
-            title: "Wygeneraowany link",
+            title: "Wygenerowany link",
             border: false,
             resizable: true,
             alwaysOnTop: true,
@@ -907,7 +907,7 @@ Ext.define('PP.view.form.FormController', {
                     },
                     {
                         xtype: 'fieldcontainer',
-                        fieldLabel: 'Blokowanie wypełnień z jednego komputera za pomocą IP oraz Cookie',
+                        fieldLabel: 'Blokowanie wypełnień z jednego komputera za pomocą Cookie',
                         defaultType: 'radiofield',
                         defaults: {
                             flex: 1
