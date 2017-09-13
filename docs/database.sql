@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS `poll`.`form` (
   `name` VARCHAR(45) NULL,
   `description` TEXT NULL,
   `order` ENUM('random', 'position') NULL,
-  `form_uuid` VARCHAR(64) NOT NULL,
+  `form_uuid` VARCHAR(36) NOT NULL,
   `created_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `active` TINYINT(1) NULL DEFAULT 0,
   `password_restriction` TINYINT(1) NULL DEFAULT 0,
@@ -73,6 +73,7 @@ CREATE TABLE IF NOT EXISTS `poll`.`form_question` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(45) NOT NULL,
   `description` TEXT NULL DEFAULT NULL,
+  `image` VARCHAR(64) NULL,
   `type` VARCHAR(45) NOT NULL,
   `position` INT NULL,
   `form_id` INT NOT NULL,
@@ -95,6 +96,7 @@ CREATE TABLE IF NOT EXISTS `poll`.`form_question` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(45) NOT NULL,
   `description` TEXT NULL DEFAULT NULL,
+  `image` VARCHAR(64) NULL,
   `type` VARCHAR(45) NOT NULL,
   `position` INT NULL,
   `form_id` INT NOT NULL,
@@ -115,7 +117,7 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `poll`.`respondent` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `guest_uuid` VARCHAR(64) NULL,
+  `guest_uuid` VARCHAR(36) NULL,
   `ip_address` VARCHAR(15) NULL,
   `start_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `end_date` TIMESTAMP NULL DEFAULT NULL,
@@ -126,6 +128,7 @@ CREATE TABLE IF NOT EXISTS `poll`.`respondent` (
   PRIMARY KEY (`id`),
   UNIQUE INDEX `id_UNIQUE` (`id` ASC),
   INDEX `fk_respondent_form1_idx` (`form_id` ASC),
+  UNIQUE INDEX `guest_uuid_UNIQUE` (`guest_uuid` ASC),
   CONSTRAINT `fk_respondent_form1`
     FOREIGN KEY (`form_id`)
     REFERENCES `poll`.`form` (`id`)
@@ -196,7 +199,7 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `poll`.`authentication` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `token_uuid` VARCHAR(128) NULL,
+  `token_uuid` VARCHAR(36) NULL,
   `type` ENUM('salt', 'token') NULL DEFAULT 'salt',
   `salt` VARCHAR(64) NULL,
   `is_valid` TINYINT(1) NULL DEFAULT 1,
