@@ -435,7 +435,7 @@ Ext.define('PP.view.form.FormController', {
             defaults: {
                 padding: 10
             },
-            title: "Dodaj odpowiedź",
+            title: "Zarządzanie odpowiedziami ["+rec.get('name')+"]",
             border: false,
             resizable: true,
             alwaysOnTop: true,
@@ -669,7 +669,7 @@ Ext.define('PP.view.form.FormController', {
             defaults: {
                 padding: 10
             },
-            title: "Pytania",
+            title: "Pytania "+rec.get('name'),
             border: false,
             resizable: true,
             modal: true,
@@ -1127,7 +1127,7 @@ Ext.define('PP.view.form.FormController', {
                     },
                     {
                         xtype: 'fieldcontainer',
-                        fieldLabel: 'Blokowanie wypełnień z jednego komputera za pomocą IP oraz Cookie',
+                        fieldLabel: 'Blokowanie wypełnień z jednego komputera za pomocą Cookie',
                         defaultType: 'radiofield',
                         defaults: {
                             flex: 1
