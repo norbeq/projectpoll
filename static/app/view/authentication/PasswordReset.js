@@ -60,7 +60,7 @@ Ext.define('PP.view.authentication.PasswordReset', {
                     formBind: true,
                     iconAlign: 'right',
                     iconCls: 'x-fa fa-angle-right',
-                    text: 'Reset Password',
+                    text: 'Zresetuj hasło',
                     listeners: {
                         click: 'onResetClick'
                     }
