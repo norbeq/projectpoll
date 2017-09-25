@@ -1,18 +1,18 @@
 token = {
-    'key': "<SECRET KEY>",
-    'expiration_seconds': 3600,
-    'iss': 'iss'
+    'key': '^82if9()iw89u89gh8Hj289fkj978u%$$ERdhj8u23908fkjn(',
+    'expiration_seconds': 36000,
+    'iss': 'projekt-miazek.pl'
 }
-db_conf = "mysql://username:password@hostname/dbname"
+db_conf = "mysql://projekt:123123@localhost/poll"
 mail_conf = {
-    'server': "smtp-server",
+    'server': "MAIL_SERVER",
     'port': 465,
     'use_ssl': True,
-    'username': 'mail',
-    'password': 'password',
-    'sender': 'sender@mail'
+    'username': 'MAIL_USERNAME',
+    'password': 'MAIL_PASSWORD',
+    'sender': 'MAIL_ADDRESS'
 }
-http_url = "application url"
+http_url = "http://projekt-miazek.pl"
 upload = {
     'folder': "upload",
     'allowed_extensions': set(['jpg', 'png', 'bmp'])
