@@ -43,7 +43,7 @@ def login():
     db.session.commit()
 
     mail = Mail(app)
-    msg = Message('Rejestracja w serwisie poll.mianor.pl',
+    msg = Message('Rejestracja w serwisie projekt-miazek.pl',
                   sender=app.config['mail_conf']['sender'],
                   recipients=[email])
 

@@ -1,6 +1,6 @@
 /.idea/
 /conf/poll.service/
-/conf/poll.mianor.pl.conf/
+/conf/projekt-miazek.pl.conf/
 conf/
 config.py/
 model/__pycache__/

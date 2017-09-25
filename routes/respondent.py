@@ -135,7 +135,7 @@ def respondent_question(guest_uuid):
                 return BadRequestResponse({"success": False, "message": "Not user"})
 
             mail = Mail(app)
-            msg = Message('Nowe wypełnienie formularza poll.mianor.pl',
+            msg = Message('Nowe wypełnienie formularza projekt-miazek.pl',
                           sender=app.config['mail_conf']['sender'],
                           recipients=[user.email])
 

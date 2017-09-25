@@ -51,7 +51,7 @@ Ext.define('PP.util.Security', {
 
         if (this.socket === null) {
             this.socket = Ext.create('PP.util.SocketIO', {
-                "host": "http://poll.mianor.pl",
+                "host": "http://projekt-miazek.pl",
                 "port": 80,
                 "reconnect": true,
                 "reconnection delay": 500,

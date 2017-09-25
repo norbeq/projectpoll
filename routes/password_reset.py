@@ -25,7 +25,7 @@ def reset():
     db.session.commit()
 
     mail = Mail(app)
-    msg = Message('Resetowanie hasła w poll.mianor.pl',
+    msg = Message('Resetowanie hasła w projekt-miazek.pl',
                   sender=app.config['mail_conf']['sender'],
                   recipients=[user.email])
 
