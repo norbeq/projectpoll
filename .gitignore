@@ -5,9 +5,6 @@ conf/
 config.py/
 model/__pycache__/
 routes/__pycache__/
-static/bootstrap.json
-static/bootstrap.jsonp
-static/build/
 util/__pycache__/
 templates/
 /config.py
